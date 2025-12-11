@@ -2,286 +2,67 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Khảo Sát Rác Thải Nhựa - EcoSurvey</title>
+  <title>EcoSurvey - Khảo sát 20 câu</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-    * { font-family: 'Inter', sans-serif; }
-    .hero-gradient { background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 50%, #a5d6a7 100%); }
-    .card-hover { transition: all 0.3s ease; }
-    .card-hover:hover { transform: translateY(-8px); box-shadow: 0 20px 40px rgba(0,0,0,0.1); }
-    .floating-animation { animation: float 6s ease-in-out infinite; }
-    @keyframes float { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-20px); } }
-    .survey-container { max-height: 600px; overflow-y: auto; }
-    .progress-bar { transition: width 0.5s ease; }
-    .q-block { margin-bottom: 24px; padding: 16px; background: #f9fafb; border-radius: 8px; }
-  </style>
 </head>
-<body class="bg-gray-50">
-  <nav class="bg-white shadow-lg sticky top-0 z-50">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="flex justify-between h-16">
-        <div class="flex items-center">
-          <i class="fas fa-leaf text-2xl text-green-600 mr-2"></i>
-          <span class="text-xl font-bold text-gray-800">EcoSurvey</span>
-        </div>
-        <div class="flex items-center space-x-8">
-          <a href="#survey" class="text-gray-700 hover:text-green-600 font-medium">Khảo Sát</a>
-          <a href="dashboard.html" class="text-gray-700 hover:text-green-600 font-medium">Thống Kê</a>
-          <a href="report.html" class="text-gray-700 hover:text-green-600 font-medium">Báo Cáo</a>
-        </div>
-      </div>
+<body>
+  <!-- PHẦN 1: Thông tin cá nhân (Câu 1-2) -->
+  <div class="bg-gray-50 p-6 rounded-xl">
+    <h3>1. Thông Tin Cá Nhân</h3>
+    <select name="age">...</select>
+    <select name="occupation">...</select>
+  </div>
+
+  <!-- PHẦN 2: Kiến thức (Câu 3-9) -->
+  <div class="bg-white p-6 rounded-xl border">
+    <h3>2. Kiến Thức về Rác Thải Nhựa</h3>
+    
+    <!-- Câu 3: Định nghĩa -->
+    <div class="q-block">...</div>
+    
+    <!-- Câu 4: Thời gian phân hủy -->
+    <div class="q-block">...</div>
+    
+    <!-- Câu 5: Tác hại (checkbox) -->
+    <div class="q-block">
+      <h3>5. Tác hại nhựa gây ra? (chọn nhiều)</h3>
+      <label><input type="checkbox" name="q5" value="a"> Ô nhiễm đất</label>
+      <label><input type="checkbox" name="q5" value="b"> Ô nhiễm nước</label>
+      <label><input type="checkbox" name="q5" value="c"> Ô nhiễm không khí</label>
+      <label><input type="checkbox" name="q5" value="d"> Vi sinh vật ăn nhựa</label>
     </div>
-  </nav>
+    
+    <!-- Câu 6-9: Tiếp tục... -->
+  </div>
 
-  <section class="hero-gradient py-20">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-        <div>
-          <h1 class="text-4xl lg:text-6xl font-bold text-gray-800 mb-6">
-            <span class="text-green-700">Khảo Sát</span><br>
-            Hiểu Biết về<br>
-            <span class="text-blue-700">Rác Thải Nhựa</span>
-          </h1>
-          <p class="text-lg text-gray-600 mb-8">
-            Tham gia khảo sát để đánh giá mức độ hiểu biết của cộng đồng về rác thải nhựa. 
-            Kết quả sẽ giúp xây dựng các chương trình giáo dục môi trường hiệu quả hơn.
-          </p>
-          <button onclick="scrollToSurvey()" class="bg-green-600 hover:bg-green-700 text-white px-8 py-4 rounded-lg text-lg font-semibold">
-            <i class="fas fa-poll mr-2"></i> Bắt Đầu Khảo Sát
-          </button>
-        </div>
-        <div class="floating-animation">
-          <img src="https://images.unsplash.com/photo-1621451537084-482c73073a0f?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" 
-               alt="Môi trường sạch" class="w-full h-96 object-cover rounded-2xl shadow-2xl">
-        </div>
-      </div>
+  <!-- PHẦN 3: Hành vi (Câu 10-18) -->
+  <div class="bg-gray-50 p-6 rounded-xl">
+    <h3>3. Hành Vi Sử Dụng Nhựa</h3>
+    <!-- Câu 10-18: Tần suất, tái chế, túi vải, ống hút... -->
+  </div>
+
+  <!-- PHẦN 4: Thái độ (Câu 19-20) -->
+  <div class="bg-white p-6 rounded-xl border">
+    <h3>4. Thái Độ và Giải Pháp</h3>
+    
+    <!-- Câu 19: Địa điểm rác nhựa (checkbox) -->
+    <div class="q-block">
+      <h3>19. Rác nhựa ở đâu nhiều nhất? (chọn nhiều)</h3>
+      <label><input type="checkbox" name="q19" value="sea"> Biển</label>
+      <label><input type="checkbox" name="q19" value="land"> Đất liền</label>
+      <label><input type="checkbox" name="q19" value="air"> Không khí</label>
+      <label><input type="checkbox" name="q19" value="urban"> Đô thị</label>
     </div>
-  </section>
-
-  <section id="survey" class="py-20 bg-white">
-    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="text-center mb-12">
-        <h2 class="text-3xl font-bold text-gray-800 mb-4">Phiếu Khảo Sát (20 câu)</h2>
-        <p class="text-gray-600">Vui lòng trả lởi các câu hỏi dưới đây một cách trung thực. Thời gian hoàn thành khoảng 5-7 phút.</p>
-      </div>
-
-      <div class="mb-8">
-        <div class="flex justify-between text-sm text-gray-600 mb-2">
-          <span>Tiến độ</span>
-          <span id="progress-text">0/20 câu</span>
-        </div>
-        <div class="w-full bg-gray-200 rounded-full h-3">
-          <div id="progress-bar" class="progress-bar bg-green-600 h-3 rounded-full" style="width: 0%"></div>
-        </div>
-      </div>
-
-      <form id="survey-form" class="space-y-8">
-        <div class="survey-container">
-          <!-- Personal Info -->
-          <div class="bg-gray-50 p-6 rounded-xl">
-            <h3 class="text-xl font-semibold text-gray-800 mb-4">1. Thông Tin Cá Nhân</h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Độ tuổi</label>
-                <select name="age" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500">
-                  <option value="">Chọn độ tuổi</option>
-                  <option value="18-24">18-24 tuổi</option>
-                  <option value="25-34">25-34 tuổi</option>
-                  <option value="35-44">35-44 tuổi</option>
-                  <option value="45-54">45-54 tuổi</option>
-                  <option value="55+">55 tuổi trở lên</option>
-                </select>
-              </div>
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Nghề nghiệp</label>
-                <select name="occupation" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500">
-                  <option value="">Chọn nghề nghiệp</option>
-                  <option value="student">Học sinh/Sinh viên</option>
-                  <option value="employee">Nhân viên văn phòng</option>
-                  <option value="business">Kinh doanh</option>
-                  <option value="freelance">Tự do</option>
-                  <option value="other">Khác</option>
-                </select>
-              </div>
-            </div>
-          </div>
-
-          <!-- 20 Questions -->
-          <div class="space-y-6">
-            <div class="q-block"><h3>1. Theo bạn, thế nào là rác thải nhựa?</h3>
-              <label><input type="radio" name="q1" value="a" required> A. Chất thải từ nhựa, polyme</label><br>
-              <label><input type="radio" name="q1" value="b"> B. Rác hữu cơ</label><br>
-              <label><input type="radio" name="q1" value="c"> C. Rác tái chế 100%</label>
-            </div>
-
-            <div class="q-block"><h3>2. Nhựa mất bao lâu để phân hủy?</h3>
-              <label><input type="radio" name="q2" value="a" required> A. 1 năm</label><br>
-              <label><input type="radio" name="q2" value="b"> B. 10 năm</label><br>
-              <label><input type="radio" name="q2" value="c"> C. 100-1000 năm</label>
-            </div>
-
-            <div class="q-block"><h3>3. Tác hại nào do nhựa gây ra? (chọn nhiều)</h3>
-              <label><input type="checkbox" name="q3" value="a"> Ô nhiễm đất</label><br>
-              <label><input type="checkbox" name="q3" value="b"> Ô nhiễm nước</label><br>
-              <label><input type="checkbox" name="q3" value="c"> Ô nhiễm không khí</label><br>
-              <label><input type="checkbox" name="q3" value="d"> Vi sinh vật ăn nhựa</label>
-            </div>
-
-            <div class="q-block"><h3>4. Bạn dùng nhựa dùng 1 lần bao lâu?</h3>
-              <label><input type="radio" name="q4" value="daily" required> Hàng ngày</label><br>
-              <label><input type="radio" name="q4" value="weekly"> Hàng tuần</label><br>
-              <label><input type="radio" name="q4" value="monthly"> Hàng tháng</label><br>
-              <label><input type="radio" name="q4" value="rarely"> Hiếm khi</label>
-            </div>
-
-            <div class="q-block"><h3>5. Bạn có phân loại rác thải nhựa?</h3>
-              <label><input type="radio" name="q5" value="always" required> Luôn luôn</label><br>
-              <label><input type="radio" name="q5" value="sometimes"> Thỉnh thoảng</label><br>
-              <label><input type="radio" name="q5" value="rarely"> Hiếm khi</label><br>
-              <label><input type="radio" name="q5" value="never"> Không bao giờ</label>
-            </div>
-
-            <div class="q-block"><h3>6. Bạn mang theo túi vải khi đi chợ?</h3>
-              <label><input type="radio" name="q6" value="always" required> Luôn</label><br>
-              <label><input type="radio" name="q6" value="sometimes"> Thỉnh thoảng</label><br>
-              <label><input type="radio" name="q6" value="rarely"> Hiếm khi</label><br>
-              <label><input type="radio" name="q6" value="never"> Không</label>
-            </div>
-
-            <div class="q-block"><h3>7. Bạn có uống nước bằng chai nhựa không?</h3>
-              <label><input type="radio" name="q7" value="daily" required> Hàng ngày</label><br>
-              <label><input type="radio" name="q7" value="weekly"> Hàng tuần</label><br>
-              <label><input type="radio" name="q7" value="monthly"> Hàng tháng</label><br>
-              <label><input type="radio" name="q7" value="rarely"> Hiếm khi</label>
-            </div>
-
-            <div class="q-block"><h3>8. Bạn tái chế nhựa ở nhà?</h3>
-              <label><input type="radio" name="q8" value="always" required> Luôn</label><br>
-              <label><input type="radio" name="q8" value="sometimes"> Thỉnh thoảng</label><br>
-              <label><input type="radio" name="q8" value="rarely"> Hiếm khi</label><br>
-              <label><input type="radio" name="q8" value="never"> Không</label>
-            </div>
-
-            <div class="q-block"><h3>9. Bạn biết biểu tượng tái chế không?</h3>
-              <label><input type="radio" name="q9" value="yes" required> Có</label><br>
-              <label><input type="radio" name="q9" value="no"> Không</label>
-            </div>
-
-            <div class="q-block"><h3>10. Nhựa PET có thể tái chế bao nhiêu lần?</h3>
-              <label><input type="radio" name="q10" value="a" required> A. 1 lần</label><br>
-              <label><input type="radio" name="q10" value="b"> B. 5-10 lần</label><br>
-              <label><input type="radio" name="q10" value="c"> C. Vô số lần</label>
-            </div>
-
-            <div class="q-block"><h3>11. Bạn có ủng hộ thuế nhựa không?</h3>
-              <label><input type="radio" name="q11" value="yes" required> Có</label><br>
-              <label><input type="radio" name="q11" value="no"> Không</label>
-            </div>
-
-            <div class="q-block"><h3>12. Bạn dùng ống hút nhựa?</h3>
-              <label><input type="radio" name="q12" value="daily" required> Hàng ngày</label><br>
-              <label><input type="radio" name="q12" value="weekly"> Hàng tuần</label><br>
-              <label><input type="radio" name="q12" value="monthly"> Hàng tháng</label><br>
-              <label><input type="radio" name="q12" value="rarely"> Hiếm khi</label>
-            </div>
-
-            <div class="q-block"><h3>13. Bạn mua hàng có bao bì nhựa?</h3>
-              <label><input type="radio" name="q13" value="always" required> Luôn chọn</label><br>
-              <label><input type="radio" name="q13" value="sometimes"> Thỉnh thoảng</label><br>
-              <label><input type="radio" name="q13" value="avoid"> Cố tránh</label>
-            </div>
-
-            <div class="q-block"><h3>14. Bạn biết về nhựa sinh học?</h3>
-              <label><input type="radio" name="q14" value="yes" required> Có</label><br>
-              <label><input type="radio" name="q14" value="no"> Không</label>
-            </div>
-
-            <div class="q-block"><h3>15. Bạn thấy nhãn “không nhựa” khi mua hàng?</h3>
-              <label><input type="radio" name="q15" value="often" required> Thường xuyên</label><br>
-              <label><input type="radio" name="q15" value="sometimes"> Thỉnh thoảng</label><br>
-              <label><input type="radio" name="q15" value="rarely"> Hiếm khi</label>
-            </div>
-
-            <div class="q-block"><h3>16. Bạn dùng ly nhựa đựng nóng?</h3>
-              <label><input type="radio" name="q16" value="daily" required> Hàng ngày</label><br>
-              <label><input type="radio" name="q16" value="weekly"> Hàng tuần</label><br>
-              <label><input type="radio" name="q16" value="rarely"> Hiếm khi</label><br>
-              <label><input type="radio" name="q16" value="never"> Không</label>
-            </div>
-
-            <div class="q-block"><h3>17. Bạn rửa & tái dụng hộp nhựa?</h3>
-              <label><input type="radio" name="q17" value="always" required> Luôn</label><br>
-              <label><input type="radio" name="q17" value="sometimes"> Thỉnh thoảng</label><br>
-              <label><input type="radio" name="q17" value="rarely"> Hiếm khi</label><br>
-              <label><input type="radio" name="q17" value="never"> Không</label>
-            </div>
-
-            <div class="q-block"><h3>18. Bạn biết ký hiệu nhựa số 1-7?</h3>
-              <label><input type="radio" name="q18" value="yes" required> Có</label><br>
-              <label><input type="radio" name="q18" value="no"> Không</label>
-            </div>
-
-            <div class="q-block"><h3>19. Bạn nghĩ rác nhựa ở đâu nhiều nhất? (chọn nhiều)</h3>
-              <label><input type="checkbox" name="q19" value="sea"> Biển</label><br>
-              <label><input type="checkbox" name="q19" value="land"> Đất liền</label><br>
-              <label><input type="checkbox" name="q19" value="air"> Không khí</label><br>
-              <label><input type="checkbox" name="q19" value="urban"> Đô thị</label>
-            </div>
-
-            <div class="q-block"><h3>20. Bạn sẵn sàng tham gia chiến dịch giảm nhựa?</h3>
-              <label><input type="radio" name="q20" value="yes" required> Có</label><br>
-              <label><input type="radio" name="q20" value="no"> Không</label>
-            </div>
-          </div>
-        </div>
-
-        <div class="text-center pt-8">
-          <button type="submit" class="bg-green-600 hover:bg-green-700 text-white px-12 py-4 rounded-lg text-lg font-semibold">
-            <i class="fas fa-paper-plane mr-2"></i> Gửi Khảo Sát
-          </button>
-        </div>
-      </form>
+    
+    <!-- Câu 20: Sẵn sàng tham gia -->
+    <div class="q-block">
+      <h3>20. Sẵn sàng tham gia chiến dịch?</h3>
+      <label><input type="radio" name="q20" value="yes"> Có</label>
+      <label><input type="radio" name="q20" value="no"> Không</label>
     </div>
-  </section>
+  </div>
 
-  <section class="py-20 bg-gray-100">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="text-center mb-12"><h2 class="text-3xl font-bold text-gray-800 mb-4">Số Liệu Thống Kê</h2></div>
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-        <div class="bg-white p-8 rounded-xl shadow-lg card-hover text-center">
-          <div class="text-4xl font-bold text-red-600 mb-2">8.3</div>
-          <div class="text-gray-600 mb-2">Tỷ tấn nhựa</div>
-          <div class="text-sm text-gray-500">thải ra mỗi năm toàn cầu</div>
-        </div>
-        <div class="bg-white p-8 rounded-xl shadow-lg card-hover text-center">
-          <div class="text-4xl font-bold text-orange-600 mb-2">1.8</div>
-          <div class="text-gray-600 mb-2">Triệu tấn rác thải nhựa</div>
-          <div class="text-sm text-gray-500">tại Việt Nam mỗi năm</div>
-        </div>
-        <div class="bg-white p-8 rounded-xl shadow-lg card-hover text-center">
-          <div class="text-4xl font-bold text-green-600 mb-2">9%</div>
-          <div class="text-gray-600 mb-2">Nhựa được tái chế</div>
-          <div class="text-sm text-gray-500">trên toàn thế giới</div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <footer class="bg-gray-800 text-white py-12">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="text-center">
-        <i class="fas fa-leaf text-2xl text-green-400 mr-2"></i>
-        <span class="text-xl font-bold">EcoSurvey</span>
-        <p class="text-gray-400 mb-4">Khảo sát hiểu biết về rác thải nhựa - Vì một môi trường xanh sạch</p>
-        <div class="text-sm text-gray-500">© 2024 EcoSurvey</div>
-      </div>
-    </div>
-  </footer>
-
-  <script src="main.js"></script>
+  <button type="submit">Gửi khảo sát</button>
 </body>
 </html>
