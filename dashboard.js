@@ -1,4 +1,4 @@
-const SHEET_URL = 'https://script.google.com/macros/s/AKfycbxuMkxMmDh6WvHoSqzDON6LWp5QuinmLQ886CLuThWduH7z14JFCojf7C5idpauQ3qB/exec';
+const SHEET_URL = 'https://script.google.com/macros/s/AKfycbxs7bESzPh888xAbzdN627nxAPRzGKXhrmnXlHHBA58P6UbabzVVczvyV26K4LJ6bYX/exec';
 
 document.addEventListener('DOMContentLoaded', initializeDashboard);
 
