@@ -1,7 +1,7 @@
 // Survey functionality
 let currentQuestion = 0;
 const totalQuestions = 20;
-const SHEET_URL = 'https://script.google.com/macros/s/AKfycbwcvO7rKDYytyTjQmDTKQqnmxC73vpu3_-nxaatbn8UuVIO-8Y_aPdYs8DDv2yr_RUJ/exec';
+const SHEET_URL = 'https://script.google.com/macros/s/AKfycbxuMkxMmDh6WvHoSqzDON6LWp5QuinmLQ886CLuThWduH7z14JFCojf7C5idpauQ3qB/exec';
 
 // Initialize page
 document.addEventListener('DOMContentLoaded', function() {
