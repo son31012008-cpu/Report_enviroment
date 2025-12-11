@@ -10,27 +10,12 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-        
-        * {
-            font-family: 'Inter', sans-serif;
-        }
-        
-        .dashboard-gradient {
-            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 50%, #bae6fd 100%);
-        }
-        
-        .stat-card {
-            transition: all 0.3s ease;
-        }
-        
-        .stat-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 12px 24px rgba(0,0,0,0.1);
-        }
-        
-        .chart-container {
-            min-height: 400px;
-        }
+        * { font-family: 'Inter', sans-serif; }
+        .dashboard-gradient { background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 50%, #bae6fd 100%); }
+        .stat-card { transition: all 0.3s ease; }
+        .stat-card:hover { transform: translateY(-4px); box-shadow: 0 12px 24px rgba(0,0,0,0.1); }
+        .chart-container { min-height: 400px; }
+        .loading { opacity: 0.5; pointer-events: none; }
     </style>
 </head>
 <body class="bg-gray-50">
@@ -58,12 +43,15 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="text-center">
                 <h1 class="text-4xl font-bold text-gray-800 mb-4">Dashboard Thống Kê</h1>
-                <p class="text-lg text-gray-600 mb-8">Tổng hợp kết quả khảo sát về hiểu biết và hành vi liên quan đến rác thải nhựa</p>
-                <div class="flex justify-center">
-                    <button onclick="refreshData()" class="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors">
+                <p class="text-lg text-gray-600 mb-8">Tổng hợp kết quả khảo sát từ Google Sheets</p>
+                <div class="flex justify-center space-x-4">
+                    <button onclick="refreshData()" id="refresh-btn" class="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors">
                         <i class="fas fa-sync-alt mr-2"></i>
                         Làm Mới Dữ Liệu
                     </button>
+                    <div id="loading-indicator" class="hidden">
+                        <i class="fas fa-spinner fa-spin text-2xl text-blue-600"></i>
+                    </div>
                 </div>
             </div>
         </div>
@@ -72,6 +60,7 @@
     <!-- Statistics Overview -->
     <section class="py-12">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <!-- Statistics Cards -->
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
                 <!-- Total Surveys -->
                 <div class="bg-white p-6 rounded-xl shadow-lg stat-card">
@@ -127,62 +116,64 @@
             </div>
 
             <!-- Charts Section -->
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
-                <!-- Age Distribution Chart -->
-                <div class="bg-white p-6 rounded-xl shadow-lg">
-                    <h3 class="text-xl font-semibold text-gray-800 mb-4">Phân Bố Độ Tuổi</h3>
-                    <div id="age-chart" class="chart-container"></div>
-                </div>
-
-                <!-- Occupation Distribution Chart -->
-                <div class="bg-white p-6 rounded-xl shadow-lg">
-                    <h3 class="text-xl font-semibold text-gray-800 mb-4">Phân Bố Nghề Nghiệp</h3>
-                    <div id="occupation-chart" class="chart-container"></div>
-                </div>
-            </div>
-
-            <!-- Knowledge and Behavior Analysis -->
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
-                <!-- Knowledge Questions Analysis -->
-                <div class="bg-white p-6 rounded-xl shadow-lg">
-                    <h3 class="text-xl font-semibold text-gray-800 mb-4">Phân Tích Kiến Thức</h3>
-                    <div id="knowledge-chart" class="chart-container"></div>
-                </div>
-
-                <!-- Behavior Analysis -->
-                <div class="bg-white p-6 rounded-xl shadow-lg">
-                    <h3 class="text-xl font-semibold text-gray-800 mb-4">Phân Tích Hành Vi</h3>
-                    <div id="behavior-chart" class="chart-container"></div>
-                </div>
-            </div>
-
-            <!-- Detailed Insights -->
-            <div class="bg-white p-8 rounded-xl shadow-lg">
-                <h3 class="text-2xl font-semibold text-gray-800 mb-6">Nhận Xét và Đánh Giá</h3>
-                
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                    <div class="text-center">
-                        <div class="p-4 bg-green-100 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center">
-                            <i class="fas fa-lightbulb text-green-600 text-2xl"></i>
-                        </div>
-                        <h4 class="font-semibold text-gray-800 mb-2">Nhận Thức</h4>
-                        <p id="knowledge-insight" class="text-gray-600 text-sm">Đang tải...</p>
+            <div id="charts-container">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
+                    <!-- Age Distribution Chart -->
+                    <div class="bg-white p-6 rounded-xl shadow-lg chart-container">
+                        <h3 class="text-xl font-semibold text-gray-800 mb-4">Phân Bố Độ Tuổi</h3>
+                        <div id="age-chart" style="height: 400px;"></div>
                     </div>
-                    
-                    <div class="text-center">
-                        <div class="p-4 bg-blue-100 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center">
-                            <i class="fas fa-balance-scale text-blue-600 text-2xl"></i>
-                        </div>
-                        <h4 class="font-semibold text-gray-800 mb-2">Hành Vi</h4>
-                        <p id="behavior-insight" class="text-gray-600 text-sm">Đang tải...</p>
+
+                    <!-- Occupation Distribution Chart -->
+                    <div class="bg-white p-6 rounded-xl shadow-lg chart-container">
+                        <h3 class="text-xl font-semibold text-gray-800 mb-4">Phân Bố Nghề Nghiệp</h3>
+                        <div id="occupation-chart" style="height: 400px;"></div>
                     </div>
+                </div>
+
+                <!-- Knowledge and Behavior Analysis -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
+                    <!-- Knowledge Questions Analysis -->
+                    <div class="bg-white p-6 rounded-xl shadow-lg chart-container">
+                        <h3 class="text-xl font-semibold text-gray-800 mb-4">Phân Tích Kiến Thức</h3>
+                        <div id="knowledge-chart" style="height: 400px;"></div>
+                    </div>
+
+                    <!-- Behavior Analysis -->
+                    <div class="bg-white p-6 rounded-xl shadow-lg chart-container">
+                        <h3 class="text-xl font-semibold text-gray-800 mb-4">Phân Tích Hành Vi</h3>
+                        <div id="behavior-chart" style="height: 400px;"></div>
+                    </div>
+                </div>
+
+                <!-- Detailed Insights -->
+                <div class="bg-white p-8 rounded-xl shadow-lg">
+                    <h3 class="text-2xl font-semibold text-gray-800 mb-6">Nhận Xét và Đánh Giá</h3>
                     
-                    <div class="text-center">
-                        <div class="p-4 bg-orange-100 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center">
-                            <i class="fas fa-chart-line text-orange-600 text-2xl"></i>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                        <div class="text-center">
+                            <div class="p-4 bg-green-100 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center">
+                                <i class="fas fa-lightbulb text-green-600 text-2xl"></i>
+                            </div>
+                            <h4 class="font-semibold text-gray-800 mb-2">Nhận Thức</h4>
+                            <p id="knowledge-insight" class="text-gray-600 text-sm">Đang tải...</p>
                         </div>
-                        <h4 class="font-semibold text-gray-800 mb-2">Xu Hướng</h4>
-                        <p id="trend-insight" class="text-gray-600 text-sm">Đang tải...</p>
+                        
+                        <div class="text-center">
+                            <div class="p-4 bg-blue-100 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center">
+                                <i class="fas fa-balance-scale text-blue-600 text-2xl"></i>
+                            </div>
+                            <h4 class="font-semibold text-gray-800 mb-2">Hành Vi</h4>
+                            <p id="behavior-insight" class="text-gray-600 text-sm">Đang tải...</p>
+                        </div>
+                        
+                        <div class="text-center">
+                            <div class="p-4 bg-orange-100 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center">
+                                <i class="fas fa-chart-line text-orange-600 text-2xl"></i>
+                            </div>
+                            <h4 class="font-semibold text-gray-800 mb-2">Xu Hướng</h4>
+                            <p id="trend-insight" class="text-gray-600 text-sm">Đang tải...</p>
+                        </div>
                     </div>
                 </div>
             </div>
