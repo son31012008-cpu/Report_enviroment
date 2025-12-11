@@ -1,166 +1,196 @@
-// Survey functionality
-let currentQuestion = 0;
-const totalQuestions = 20;
+// 📊 Cấu hình Google Sheets API
 const SHEET_URL = 'https://script.google.com/macros/s/AKfycbxuMkxMmDh6WvHoSqzDON6LWp5QuinmLQ886CLuThWduH7z14JFCojf7C5idpauQ3qB/exec';
 
-// Initialize page
+// 🚀 Khởi tạo trang
 document.addEventListener('DOMContentLoaded', function() {
-    initializeAnimations();
-    setupFormHandlers();
-    updateProgress();
+  initializeAnimations();
+  setupFormHandlers();
+  updateProgress();
 });
 
-// ... (các hàm scrollToSurvey, initializeAnimations, setupFormHandlers, updateProgress giữ nguyên)
+// 💫 Hiệu ứng cuộn đến form
+function scrollToSurvey() {
+  document.getElementById('survey').scrollIntoView({ behavior: 'smooth' });
+}
 
-// Handle form submission
+// 🎨 Khởi tạo animation
+function initializeAnimations() {
+  anime({
+    targets: '.hero-gradient h1',
+    opacity: [0, 1],
+    translateY: [50, 0],
+    duration: 1000,
+    easing: 'easeOutExpo'
+  });
+  
+  anime({
+    targets: '.floating-animation',
+    opacity: [0, 1],
+    scale: [0.8, 1],
+    duration: 1200,
+    delay: 300,
+    easing: 'easeOutExpo'
+  });
+  
+  anime({
+    targets: '.card-hover',
+    opacity: [0, 1],
+    translateY: [30, 0],
+    duration: 800,
+    delay: anime.stagger(200),
+    easing: 'easeOutExpo'
+  });
+}
+
+// 🎯 Thiết lập form handler
+function setupFormHandlers() {
+  const form = document.getElementById('survey-form');
+  const inputs = form.querySelectorAll('input, select');
+  
+  inputs.forEach(input => {
+    input.addEventListener('change', updateProgress);
+    input.addEventListener('input', updateProgress);
+  });
+  
+  form.addEventListener('submit', handleFormSubmit);
+}
+
+// 📈 Cập nhật thanh tiến trình
+function updateProgress() {
+  const form = document.getElementById('survey-form');
+  const requiredGroups = [
+    'age', 'occupation', 'q1', 'q2', 'q3', 'q4', 'q5', 'q6', 'q7', 
+    'q8', 'q9', 'q10', 'q11', 'q12', 'q13', 'q14', 'q15', 'q16', 'q17', 'q18', 'q20'
+  ];
+  
+  let answered = 0;
+  requiredGroups.forEach(group => {
+    const groupInputs = form.querySelectorAll(`[name="${group}"]`);
+    if (groupInputs.length > 0) {
+      if (groupInputs[0].type === 'radio') {
+        if (form.querySelector(`[name="${group}"]:checked`)) answered++;
+      } else if (groupInputs[0].type === 'checkbox') {
+        if (form.querySelector(`[name="${group}"]:checked`)) answered++;
+      } else {
+        if (groupInputs[0].value.trim() !== '') answered++;
+      }
+    }
+  });
+
+  const progress = (answered / requiredGroups.length) * 100;
+  document.getElementById('progress-bar').style.width = progress + '%';
+  document.getElementById('progress-text').textContent = `${answered}/${requiredGroups.length} câu`;
+}
+
+// 📝 Xử lý submit form
 async function handleFormSubmit(e) {
-    e.preventDefault();
-    
-    const formData = new FormData(e.target);
-    const surveyData = {};
-    
-    // Convert FormData to object
-    for (let [key, value] of formData.entries()) {
-        if (surveyData[key]) {
-            if (Array.isArray(surveyData[key])) {
-                surveyData[key].push(value);
-            } else {
-                surveyData[key] = [surveyData[key], value];
-            }
-        } else {
-            surveyData[key] = value;
-        }
+  e.preventDefault();
+  
+  const formData = new FormData(e.target);
+  const surveyData = {};
+  
+  // Xử lý radio và select
+  for (let [key, value] of formData.entries()) {
+    if (surveyData[key]) {
+      if (Array.isArray(surveyData[key])) surveyData[key].push(value);
+      else surveyData[key] = [surveyData[key], value];
+    } else {
+      surveyData[key] = value;
     }
-    
-    // Handle checkboxes separately
-    const checkboxes = e.target.querySelectorAll('input[type="checkbox"]');
-    const checkboxGroups = {};
-    
-    checkboxes.forEach(checkbox => {
-        if (!checkboxGroups[checkbox.name]) {
-            checkboxGroups[checkbox.name] = [];
-        }
-        if (checkbox.checked) {
-            checkboxGroups[checkbox.name].push(checkbox.value);
-        }
-    });
-    
-    // Add checkbox data to survey data
-    Object.keys(checkboxGroups).forEach(key => {
-        surveyData[key] = checkboxGroups[key];
-    });
-    
-    // Add timestamp
-    surveyData.timestamp = new Date().toISOString();
-    surveyData.id = generateSurveyId();
-    
-    // Save to localStorage
-    saveSurveyData(surveyData);
-    
-    // Save to Google Sheets
-    await saveToGoogleSheets(surveyData);
-    
-    // Show success message
-    showSuccessMessage();
-    
-    // Redirect to dashboard after delay
-    setTimeout(() => {
-        window.location.href = 'dashboard.html';
-    }, 2000);
+  }
+  
+  // Xử lý checkbox (q3, q19)
+  for (let i of [3, 19]) {
+    const checkboxes = document.querySelectorAll(`input[name="q${i}"]:checked`);
+    if (checkboxes.length > 0) {
+      surveyData[`q${i}`] = Array.from(checkboxes).map(cb => cb.value);
+    }
+  }
+  
+  // Thêm metadata
+  surveyData.timestamp = new Date().toISOString();
+  surveyData.id = 'survey_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+  
+  // ✅ CHỈ LƯU VÀO GOOGLE SHEETS - KHÔNG DÙNG LOCALSTORAGE
+  await saveToGoogleSheets(surveyData);
+  
+  // Hiển thị thông báo thành công
+  showSuccessMessage();
+  
+  // Chuyển hướng sau 2 giây
+  setTimeout(() => {
+    window.location.href = 'dashboard.html';
+  }, 2000);
 }
 
-// Save data to Google Sheets
+// ☁️ Lưu vào Google Sheets
 async function saveToGoogleSheets(data) {
-    try {
-        const response = await fetch(SHEET_URL, {
-            method: 'POST',
-            mode: 'no-cors',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                action: 'save',
-                data: data
-            })
-        });
-        
-        // Note: Due to no-cors mode, we can't check response status
-        console.log('Data sent to Google Sheets');
-    } catch (error) {
-        console.error('Error saving to Google Sheets:', error);
-    }
-}
-
-// ... (các hàm generateSurveyId, saveSurveyData, showSuccessMessage giữ nguyên)
-
-// Utility functions
-function getAllSurveyData() {
-    return JSON.parse(localStorage.getItem('surveys') || '[]');
-}
-
-function getSurveyStats() {
-    const surveys = getAllSurveyData();
-    
-    if (surveys.length === 0) {
-        return {
-            total: 0,
-            ageDistribution: {},
-            occupationDistribution: {},
-            knowledgeScore: 0,
-            behaviorScore: 0
-        };
-    }
-    
-    // Calculate statistics
-    const stats = {
-        total: surveys.length,
-        ageDistribution: {},
-        occupationDistribution: {},
-        knowledgeScore: 0,
-        behaviorScore: 0
-    };
-    
-    surveys.forEach(survey => {
-        // Age distribution
-        if (survey.age) {
-            stats.ageDistribution[survey.age] = (stats.ageDistribution[survey.age] || 0) + 1;
-        }
-        
-        // Occupation distribution
-        if (survey.occupation) {
-            stats.occupationDistribution[survey.occupation] = (stats.occupationDistribution[survey.occupation] || 0) + 1;
-        }
-        
-        // Knowledge score (simplified calculation)
-        let knowledgePoints = 0;
-        if (survey.q1 === 'a') knowledgePoints += 1;
-        if (survey.q2 === 'c') knowledgePoints += 1;
-        if (survey.q3 && (Array.isArray(survey.q3) && survey.q3.includes('d'))) knowledgePoints += 1;
-        
-        stats.knowledgeScore += knowledgePoints;
-        
-        // Behavior score (simplified calculation)
-        let behaviorPoints = 0;
-        if (survey.q4 === 'rarely') behaviorPoints += 2;
-        else if (survey.q4 === 'monthly') behaviorPoints += 1;
-        
-        if (survey.q5 === 'always') behaviorPoints += 2;
-        else if (survey.q5 === 'sometimes') behaviorPoints += 1;
-        
-        stats.behaviorScore += behaviorPoints;
+  try {
+    await fetch(SHEET_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'save', data: data })
     });
-    
-    // Calculate averages
-    stats.knowledgeScore = Math.round((stats.knowledgeScore / surveys.length) * 100 / 3);
-    stats.behaviorScore = Math.round((stats.behaviorScore / surveys.length) * 100 / 4);
-    
-    return stats;
+    console.log('✅ Đã lưu vào Google Sheets');
+  } catch (error) {
+    console.error('❌ Lỗi khi lưu Google Sheets:', error);
+    showNotification('Lưu thất bại! Vui lòng thử lại.', 'error');
+  }
 }
 
-// Export functions for use in other pages
-window.surveyUtils = {
-    getAllSurveyData,
-    getSurveyStats,
-    saveSurveyData,
-    SHEET_URL
-};
+// 🎉 Thông báo thành công
+function showSuccessMessage() {
+  const message = document.createElement('div');
+  message.className = 'fixed top-4 right-4 bg-green-500 text-white px-6 py-4 rounded-lg shadow-lg z-50';
+  message.innerHTML = '<i class="fas fa-check-circle mr-2"></i>Cảm ơn bạn! Dữ liệu đã được lưu vào hệ thống.';
+  document.body.appendChild(message);
+  
+  anime({
+    targets: message,
+    opacity: [0, 1],
+    translateX: [100, 0],
+    duration: 500,
+    easing: 'easeOutExpo'
+  });
+  
+  setTimeout(() => {
+    anime({
+      targets: message,
+      opacity: [1, 0],
+      translateX: [0, 100],
+      duration: 500,
+      easing: 'easeInExpo',
+      complete: () => document.body.removeChild(message)
+    });
+  }, 3000);
+}
+
+// ⚠️ Thông báo lỗi
+function showNotification(message, type = 'error') {
+  const notification = document.createElement('div');
+  notification.className = `fixed top-4 right-4 px-6 py-4 rounded-lg shadow-lg z-50 ${
+    type === 'error' ? 'bg-red-500' : 'bg-yellow-500'
+  } text-white`;
+  notification.textContent = message;
+  document.body.appendChild(notification);
+  
+  anime({
+    targets: notification,
+    opacity: [0, 1],
+    translateX: [100, 0],
+    duration: 500,
+    easing: 'easeOutExpo'
+  });
+  
+  setTimeout(() => {
+    anime({
+      targets: notification,
+      opacity: [1, 0],
+      translateX: [0, 100],
+      duration: 500,
+      easing: 'easeInExpo',
+      complete: () => document.body.removeChild(notification)
+    });
+  }, 3000);
+}
