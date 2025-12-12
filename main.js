@@ -90,10 +90,6 @@ async function handleFormSubmit(e) {
   const btnText = submitBtn.querySelector('.btn-text');
   const btnIcon = submitBtn.querySelector('i');
   
-  // Lưu trạng thái ban đầu
-  const originalText = btnText.textContent;
-  const originalIconClass = btnIcon.className;
-  
   // Vô hiệu hóa nút và hiển thị loading
   submitBtn.disabled = true;
   btnText.textContent = 'Đang gửi...';
@@ -126,16 +122,16 @@ async function handleFormSubmit(e) {
     
     showSuccessMessage();
     
-    // Chờ 2 giây để người dùng đọc thông báo
+    // Chờ 1 giây để người dùng đọc thông báo
     setTimeout(() => {
       window.location.href = 'dashboard.html';
-    }, 2000);
+    }, 1000);
     
   } catch (error) {
     console.error('Lỗi khi gửi form:', error);
     showNotification('Gửi thất bại! Vui lòng thử lại.', 'error');
     
-    // Khôi phục trạng thái nút khi có lỗi
+    // Khôi phục nút khi có lỗi
     submitBtn.disabled = false;
     btnText.textContent = 'Gửi lại';
     btnIcon.className = 'fas fa-redo ml-2';
@@ -180,7 +176,7 @@ function showSuccessMessage() {
       easing: 'easeInExpo',
       complete: () => document.body.removeChild(message)
     });
-  }, 3000);
+  }, 2000);
 }
 
 function showNotification(message, type = 'error') {
@@ -208,5 +204,5 @@ function showNotification(message, type = 'error') {
       easing: 'easeInExpo',
       complete: () => document.body.removeChild(notification)
     });
-  }, 3000);
+  }, 2000);
 }
