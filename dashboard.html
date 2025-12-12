@@ -3,19 +3,29 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Thống Kê - EcoSurvey</title>
+    <title>Dashboard - EcoSurvey</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.4.3/echarts.min.js"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-        * { font-family: 'Inter', sans-serif; }
-        .dashboard-gradient { background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 50%, #bae6fd 100%); }
-        .stat-card { transition: all 0.3s ease; }
-        .stat-card:hover { transform: translateY(-4px); box-shadow: 0 12px 24px rgba(0,0,0,0.1); }
-        .chart-container { min-height: 400px; }
-        .loading { opacity: 0.5; pointer-events: none; }
+        
+        * {
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .dashboard-gradient {
+            background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 50%, #6ee7b7 100%);
+        }
+        
+        .stat-card {
+            transition: all 0.3s ease;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+        }
     </style>
 </head>
 <body class="bg-gray-50">
@@ -31,7 +41,7 @@
                 </div>
                 <div class="flex items-center space-x-8">
                     <a href="index.html" class="text-gray-700 hover:text-green-600 font-medium transition-colors">Khảo Sát</a>
-                    <a href="dashboard.html" class="text-green-600 font-medium">Thống Kê</a>
+                    <a href="dashboard.html" class="text-green-600 font-medium">Dashboard</a>
                     <a href="report.html" class="text-gray-700 hover:text-green-600 font-medium transition-colors">Báo Cáo</a>
                 </div>
             </div>
@@ -42,139 +52,92 @@
     <section class="dashboard-gradient py-16">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="text-center">
-                <h1 class="text-4xl font-bold text-gray-800 mb-4">Thống Kê</h1>
-                <p class="text-lg text-gray-600 mb-8">Tổng hợp kết quả khảo sát</p>
-                <div class="flex justify-center space-x-4">
-                    <button onclick="refreshData()" id="refresh-btn" class="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors">
-                        <i class="fas fa-sync-alt mr-2"></i>
-                        Làm Mới Dữ Liệu
-                    </button>
-                    <div id="loading-indicator" class="hidden">
-                        <i class="fas fa-spinner fa-spin text-2xl text-blue-600"></i>
-                    </div>
-                </div>
+                <h1 class="text-4xl font-bold text-gray-800 mb-4">Dashboard Thống Kê</h1>
+                <p class="text-lg text-gray-600">Tổng quan kết quả khảo sát hiểu biết về rác thải nhựa</p>
             </div>
         </div>
     </section>
 
-    <!-- Statistics Overview -->
+    <!-- Main Dashboard -->
     <section class="py-12">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <!-- Statistics Cards -->
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-                <!-- Total Surveys -->
-                <div class="bg-white p-6 rounded-xl shadow-lg stat-card">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <p class="text-sm font-medium text-gray-600">Tổng Số Khảo Sát</p>
-                            <p id="total-surveys" class="text-3xl font-bold text-gray-800">0</p>
-                        </div>
-                        <div class="p-3 bg-blue-100 rounded-full">
-                            <i class="fas fa-poll text-blue-600 text-xl"></i>
-                        </div>
-                    </div>
-                </div>
+            
+            <!-- Knowledge Analysis -->
+            <div class="bg-white p-8 rounded-xl shadow-lg mb-8">
+                <h2 class="text-2xl font-bold text-gray-800 mb-6">
+                    <i class="fas fa-brain text-blue-600 mr-3"></i>
+                    Phân Tích Kiến Thức
+                </h2>
+                <div id="knowledge-chart" style="height: 400px;"></div>
+            </div>
 
-                <!-- Knowledge Score -->
-                <div class="bg-white p-6 rounded-xl shadow-lg stat-card">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <p class="text-sm font-medium text-gray-600">Điểm Kiến Thức TB</p>
-                            <p id="knowledge-score" class="text-3xl font-bold text-green-600">0%</p>
-                        </div>
-                        <div class="p-3 bg-green-100 rounded-full">
-                            <i class="fas fa-brain text-green-600 text-xl"></i>
-                        </div>
-                    </div>
-                </div>
+            <!-- Behavior Analysis -->
+            <div class="bg-white p-8 rounded-xl shadow-lg mb-8">
+                <h2 class="text-2xl font-bold text-gray-800 mb-6">
+                    <i class="fas fa-recycle text-green-600 mr-3"></i>
+                    Phân Tích Hành Vi
+                </h2>
+                <!-- THÊM PHẦN TỬ NÀY - BỊ THIẾU -->
+                <div id="behavior-chart" style="height: 400px;"></div>
+            </div>
 
-                <!-- Behavior Score -->
-                <div class="bg-white p-6 rounded-xl shadow-lg stat-card">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <p class="text-sm font-medium text-gray-600">Điểm Hành Vi TB</p>
-                            <p id="behavior-score" class="text-3xl font-bold text-orange-600">0%</p>
-                        </div>
-                        <div class="p-3 bg-orange-100 rounded-full">
-                            <i class="fas fa-recycle text-orange-600 text-xl"></i>
-                        </div>
+            <!-- Real-time Stats -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                <div class="bg-white p-6 rounded-xl shadow-lg stat-card text-center">
+                    <div class="p-4 bg-blue-100 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center">
+                        <i class="fas fa-users text-blue-600 text-2xl"></i>
                     </div>
+                    <div id="total-surveys" class="text-3xl font-bold text-blue-600">0</div>
+                    <div class="text-sm text-gray-600">Tổng số khảo sát</div>
                 </div>
-
-                <!-- Participation Rate -->
-                <div class="bg-white p-6 rounded-xl shadow-lg stat-card">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <p class="text-sm font-medium text-gray-600">Tỷ Lệ Tham Gia</p>
-                            <p id="participation-rate" class="text-3xl font-bold text-purple-600">0%</p>
-                        </div>
-                        <div class="p-3 bg-purple-100 rounded-full">
-                            <i class="fas fa-users text-purple-600 text-xl"></i>
-                        </div>
+                
+                <div class="bg-white p-6 rounded-xl shadow-lg stat-card text-center">
+                    <div class="p-4 bg-green-100 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center">
+                        <i class="fas fa-graduation-cap text-green-600 text-2xl"></i>
                     </div>
+                    <div id="avg-knowledge" class="text-3xl font-bold text-green-600">0%</div>
+                    <div class="text-sm text-gray-600">Điểm kiến thức TB</div>
+                </div>
+                
+                <div class="bg-white p-6 rounded-xl shadow-lg stat-card text-center">
+                    <div class="p-4 bg-orange-100 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center">
+                        <i class="fas fa-heart text-orange-600 text-2xl"></i>
+                    </div>
+                    <div id="avg-behavior" class="text-3xl font-bold text-orange-600">0%</div>
+                    <div class="text-sm text-gray-600">Điểm hành vi TB</div>
+                </div>
+                
+                <div class="bg-white p-6 rounded-xl shadow-lg stat-card text-center">
+                    <div class="p-4 bg-purple-100 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center">
+                        <i class="fas fa-chart-line text-purple-600 text-2xl"></i>
+                    </div>
+                    <div id="participation-rate" class="text-3xl font-bold text-purple-600">0%</div>
+                    <div class="text-sm text-gray-600">Tỷ lệ tham gia</div>
                 </div>
             </div>
 
-            <!-- Charts Section -->
-            <div id="charts-container">
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
-                    <!-- Age Distribution Chart -->
-                    <div class="bg-white p-6 rounded-xl shadow-lg chart-container">
-                        <h3 class="text-xl font-semibold text-gray-800 mb-4">Phân Bố Độ Tuổi</h3>
-                        <div id="age-chart" style="height: 400px;"></div>
-                    </div>
-
-                    <!-- Occupation Distribution Chart -->
-                    <div class="bg-white p-6 rounded-xl shadow-lg chart-container">
-                        <h3 class="text-xl font-semibold text-gray-800 mb-4">Phân Bố Nghề Nghiệp</h3>
-                        <div id="occupation-chart" style="height: 400px;"></div>
-                    </div>
-                </div>
-
-                <!-- Knowledge and Behavior Analysis -->
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
-                    <!-- Knowledge Questions Analysis -->
-                    <div class="bg-white p-6 rounded-xl shadow-lg chart-container">
-                        <h3 class="text-xl font-semibold text-gray-800 mb-4">Phân Tích Kiến Thức</h3>
-                        <div id="knowledge-chart" style="height: 400px;"></div>
-                    </div>
-
-                    <!-- Behavior Analysis -->
-                    <div class="bg-white p-6 rounded-xl shadow-lg chart-container">
-                        <h3 class="text-xl font-semibold text-gray-800 mb-4">Phân Tích Hành Vi</h3>
-                        <div id="behavior-chart" style="height: 400px;"></div>
-                    </div>
-                </div>
-
-                <!-- Detailed Insights -->
-                <div class="bg-white p-8 rounded-xl shadow-lg">
-                    <h3 class="text-2xl font-semibold text-gray-800 mb-6">Nhận Xét và Đánh Giá</h3>
-                    
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                        <div class="text-center">
-                            <div class="p-4 bg-green-100 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center">
-                                <i class="fas fa-lightbulb text-green-600 text-2xl"></i>
-                            </div>
-                            <h4 class="font-semibold text-gray-800 mb-2">Nhận Thức</h4>
-                            <p id="knowledge-insight" class="text-gray-600 text-sm">Đang tải...</p>
-                        </div>
-                        
-                        <div class="text-center">
-                            <div class="p-4 bg-blue-100 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center">
-                                <i class="fas fa-balance-scale text-blue-600 text-2xl"></i>
-                            </div>
-                            <h4 class="font-semibold text-gray-800 mb-2">Hành Vi</h4>
-                            <p id="behavior-insight" class="text-gray-600 text-sm">Đang tải...</p>
-                        </div>
-                        
-                        <div class="text-center">
-                            <div class="p-4 bg-orange-100 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center">
-                                <i class="fas fa-chart-line text-orange-600 text-2xl"></i>
-                            </div>
-                            <h4 class="font-semibold text-gray-800 mb-2">Xu Hướng</h4>
-                            <p id="trend-insight" class="text-gray-600 text-sm">Đang tải...</p>
-                        </div>
-                    </div>
+            <!-- Recent Surveys -->
+            <div class="bg-white p-8 rounded-xl shadow-lg">
+                <h3 class="text-xl font-bold text-gray-800 mb-4">
+                    <i class="fas fa-history text-indigo-600 mr-2"></i>
+                    Khảo Sát Gần Đây
+                </h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="p-3 text-left font-semibold text-gray-800">ID</th>
+                                <th class="p-3 text-left font-semibold text-gray-800">Tuổi</th>
+                                <th class="p-3 text-left font-semibold text-gray-800">Nghề nghiệp</th>
+                                <th class="p-3 text-left font-semibold text-gray-800">Điểm KT</th>
+                                <th class="p-3 text-left font-semibold text-gray-800">Điểm HV</th>
+                                <th class="p-3 text-left font-semibold text-gray-800">Thời gian</th>
+                            </tr>
+                        </thead>
+                        <tbody id="recent-surveys">
+                            <tr><td colspan="6" class="p-4 text-center text-gray-500">Đang tải dữ liệu...</td></tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
@@ -190,8 +153,7 @@
                 </div>
                 <p class="text-gray-400 mb-4">Khảo sát hiểu biết về rác thải nhựa - Vì một môi trường xanh sạch</p>
                 <div class="text-sm text-gray-500">
-                    © 2025 EcoSurvey. Thực hiện cho mục đích nghiên cứu và giáo dục môi trường.
-                    Thực hiện bởi Vũ Minh Sơn 12/5 THPT Thái Phiên.
+                    © 2025 EcoSurvey. Thực hiện cho mục đích nghiên cứu và giáo dục môi trường. Thực hiện bởi Vũ Minh Sơn 12/5 THPT Thái Phiên.
                 </div>
             </div>
         </div>
