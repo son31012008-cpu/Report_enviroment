@@ -1,19 +1,18 @@
-// 📊 Cấu hình Google Sheets API
 const SHEET_URL = 'https://script.google.com/macros/s/AKfycbwahWIWlY04K9T9yt8REKadzytvZ3hH0V9UytzToO2GTYksmn5MtSUEFuE7YVsaNvgP/exec';
 
-// 🚀 Khởi tạo trang
+
 document.addEventListener('DOMContentLoaded', function() {
   initializeAnimations();
   setupFormHandlers();
   updateProgress();
 });
 
-// 💫 Hiệu ứng cuộn đến form
+
 function scrollToSurvey() {
   document.getElementById('survey').scrollIntoView({ behavior: 'smooth' });
 }
 
-// 🎨 Khởi tạo animation
+
 function initializeAnimations() {
   anime({
     targets: '.hero-gradient h1',
@@ -42,7 +41,7 @@ function initializeAnimations() {
   });
 }
 
-// 🎯 Thiết lập form handler
+
 function setupFormHandlers() {
   const form = document.getElementById('survey-form');
   const inputs = form.querySelectorAll('input, select');
@@ -55,7 +54,7 @@ function setupFormHandlers() {
   form.addEventListener('submit', handleFormSubmit);
 }
 
-// 📈 Cập nhật thanh tiến trình
+
 function updateProgress() {
   const form = document.getElementById('survey-form');
   const requiredGroups = [
@@ -82,14 +81,14 @@ function updateProgress() {
   document.getElementById('progress-text').textContent = `${answered}/${requiredGroups.length} câu`;
 }
 
-// 📝 Xử lý submit form
+
 async function handleFormSubmit(e) {
   e.preventDefault();
   
   const formData = new FormData(e.target);
   const surveyData = {};
   
-  // Xử lý radio và select
+
   for (let [key, value] of formData.entries()) {
     if (surveyData[key]) {
       if (Array.isArray(surveyData[key])) surveyData[key].push(value);
@@ -99,7 +98,7 @@ async function handleFormSubmit(e) {
     }
   }
   
-  // Xử lý checkbox (q3, q19)
+
   for (let i of [3, 19]) {
     const checkboxes = document.querySelectorAll(`input[name="q${i}"]:checked`);
     if (checkboxes.length > 0) {
@@ -110,20 +109,17 @@ async function handleFormSubmit(e) {
   // Thêm metadata
   surveyData.timestamp = new Date().toISOString();
   surveyData.id = 'survey_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-  
-  // ✅ CHỈ LƯU VÀO GOOGLE SHEETS - KHÔNG DÙNG LOCALSTORAGE
+ 
   await saveToGoogleSheets(surveyData);
   
-  // Hiển thị thông báo thành công
+
   showSuccessMessage();
   
-  // Chuyển hướng sau 2 giây
   setTimeout(() => {
     window.location.href = 'dashboard.html';
-  }, 2000);
+  }, 0);
 }
 
-// ☁️ Lưu vào Google Sheets
 async function saveToGoogleSheets(data) {
   try {
     await fetch(SHEET_URL, {
@@ -132,14 +128,13 @@ async function saveToGoogleSheets(data) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ action: 'save', data: data })
     });
-    console.log('✅ Đã lưu vào Google Sheets');
+    console.log('Bạn đã hoàn thành khảo sát');
   } catch (error) {
-    console.error('❌ Lỗi khi lưu Google Sheets:', error);
+    console.error('Lỗi khi lưu', error);
     showNotification('Lưu thất bại! Vui lòng thử lại.', 'error');
   }
 }
 
-// 🎉 Thông báo thành công
 function showSuccessMessage() {
   const message = document.createElement('div');
   message.className = 'fixed top-4 right-4 bg-green-500 text-white px-6 py-4 rounded-lg shadow-lg z-50';
@@ -166,7 +161,6 @@ function showSuccessMessage() {
   }, 3000);
 }
 
-// ⚠️ Thông báo lỗi
 function showNotification(message, type = 'error') {
   const notification = document.createElement('div');
   notification.className = `fixed top-4 right-4 px-6 py-4 rounded-lg shadow-lg z-50 ${
