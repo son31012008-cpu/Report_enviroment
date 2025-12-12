@@ -6,16 +6,16 @@
   <title>Khảo Sát Rác Thải Nhựa - EcoSurvey</title>
   
   <!-- Tailwind CSS -->
-  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.tailwindcss.com "></script>
   
   <!-- Anime.js (hiệu ứng) -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js "></script>
   
   <!-- Font Awesome icons -->
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css " rel="stylesheet">
   
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300 ;400;500;600;700&display=swap');
     * { font-family: 'Inter', sans-serif; }
     
     .hero-gradient {
@@ -108,6 +108,13 @@
       transform: translateY(-2px);
       box-shadow: 0 6px 12px rgba(16, 185, 129, 0.4);
     }
+    
+    /* CSS cho nút khi bị vô hiệu hóa */
+    #submit-btn:disabled {
+      opacity: 0.7;
+      cursor: not-allowed;
+      transform: none !important;
+    }
   </style>
 </head>
 <body class="bg-gray-50">
@@ -147,7 +154,7 @@
           </button>
         </div>
         <div class="floating-animation">
-          <img src="https://images.unsplash.com/photo-1621451537084-482c73073a0f?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" 
+          <img src="https://images.unsplash.com/photo-1621451537084-482c73073a0f?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80 " 
                alt="Môi trường sạch" 
                class="w-full h-96 object-cover rounded-2xl shadow-2xl">
         </div>
@@ -684,10 +691,11 @@
           </div>
         </div>
 
-        <!-- Submit Button -->
+        <!-- Submit Button - ĐÃ CẬP NHẬT VỚI ID VÀ SPAN -->
         <div class="text-center pt-8">
-          <button type="submit" class="bg-green-600 hover:bg-green-700 text-white px-12 py-4 rounded-lg text-lg font-semibold transition-all transform hover:scale-105 shadow-lg">
-            <i class="fas fa-paper-plane mr-2"></i> Gửi Khảo Sát
+          <button type="submit" id="submit-btn" class="bg-green-600 hover:bg-green-700 text-white px-12 py-4 rounded-lg text-lg font-semibold transition-all transform hover:scale-105 shadow-lg">
+            <span class="btn-text">Gửi Khảo Sát</span>
+            <i class="fas fa-paper-plane ml-2"></i>
           </button>
         </div>
       </form>
