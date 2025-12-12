@@ -1,4 +1,4 @@
-const SHEET_URL = 'https://script.google.com/macros/s/AKfycbwahWIWlY04K9T9yt8REKadzytvZ3hH0V9UytzToO2GTYksmn5MtSUEFuE7YVsaNvgP/exec';
+const SHEET_URL = 'https://script.google.com/macros/s/AKfycbwahWIWlY04K9T9yt8REKadzytvZ3hH0V9UytzToO2GTYksmn5MtSUEFuE7YVsaNvgP/exec ';
 
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -85,39 +85,61 @@ function updateProgress() {
 async function handleFormSubmit(e) {
   e.preventDefault();
   
-  const formData = new FormData(e.target);
-  const surveyData = {};
+  // Lấy nút submit và các phần tử con
+  const submitBtn = document.getElementById('submit-btn');
+  const btnText = submitBtn.querySelector('.btn-text');
+  const btnIcon = submitBtn.querySelector('i');
   
-
-  for (let [key, value] of formData.entries()) {
-    if (surveyData[key]) {
-      if (Array.isArray(surveyData[key])) surveyData[key].push(value);
-      else surveyData[key] = [surveyData[key], value];
-    } else {
-      surveyData[key] = value;
+  // Lưu trạng thái ban đầu
+  const originalText = btnText.textContent;
+  const originalIconClass = btnIcon.className;
+  
+  // Vô hiệu hóa nút và hiển thị loading
+  submitBtn.disabled = true;
+  btnText.textContent = 'Đang gửi...';
+  btnIcon.className = 'fas fa-spinner fa-spin ml-2';
+  
+  try {
+    const formData = new FormData(e.target);
+    const surveyData = {};
+    
+    for (let [key, value] of formData.entries()) {
+      if (surveyData[key]) {
+        if (Array.isArray(surveyData[key])) surveyData[key].push(value);
+        else surveyData[key] = [surveyData[key], value];
+      } else {
+        surveyData[key] = value;
+      }
     }
-  }
-  
-
-  for (let i of [3, 19]) {
-    const checkboxes = document.querySelectorAll(`input[name="q${i}"]:checked`);
-    if (checkboxes.length > 0) {
-      surveyData[`q${i}`] = Array.from(checkboxes).map(cb => cb.value);
+    
+    for (let i of [3, 19]) {
+      const checkboxes = document.querySelectorAll(`input[name="q${i}"]:checked`);
+      if (checkboxes.length > 0) {
+        surveyData[`q${i}`] = Array.from(checkboxes).map(cb => cb.value);
+      }
     }
+    
+    surveyData.timestamp = new Date().toISOString();
+    surveyData.id = 'survey_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+    
+    await saveToGoogleSheets(surveyData);
+    
+    showSuccessMessage();
+    
+    // Chờ 2 giây để người dùng đọc thông báo
+    setTimeout(() => {
+      window.location.href = 'dashboard.html';
+    }, 2000);
+    
+  } catch (error) {
+    console.error('Lỗi khi gửi form:', error);
+    showNotification('Gửi thất bại! Vui lòng thử lại.', 'error');
+    
+    // Khôi phục trạng thái nút khi có lỗi
+    submitBtn.disabled = false;
+    btnText.textContent = 'Gửi lại';
+    btnIcon.className = 'fas fa-redo ml-2';
   }
-  
-  // Thêm metadata
-  surveyData.timestamp = new Date().toISOString();
-  surveyData.id = 'survey_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
- 
-  await saveToGoogleSheets(surveyData);
-  
-
-  showSuccessMessage();
-  
-  setTimeout(() => {
-    window.location.href = 'dashboard.html';
-  }, 0);
 }
 
 async function saveToGoogleSheets(data) {
