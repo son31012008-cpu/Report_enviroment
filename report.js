@@ -1,23 +1,23 @@
-// 📊 URL Google Sheets API - ĐÃ BỎ DẤU CÁCH THỪA
+
 const SHEET_URL = 'https://script.google.com/macros/s/AKfycbwahWIWlY04K9T9yt8REKadzytvZ3hH0V9UytzToO2GTYksmn5MtSUEFuE7YVsaNvgP/exec';
-const PIN = 'sangtaothaiphien_vuminhson_12_5'; // PIN để xuất báo cáo
+const PIN = 'sangtaothaiphien_vuminhson_12_5'; 
 
 document.addEventListener('DOMContentLoaded', initializeReport);
 
-// 1️⃣ THÊM: Hàm refreshData để nút làm mới hoạt động
+
 async function refreshData() {
   localStorage.removeItem('surveyReportData');
   localStorage.removeItem('lastFetchTime');
   await initializeReport();
 }
 
-// Khởi tạo report
+
 async function initializeReport() {
   showLoadingState();
   try {
     const cachedData = getCachedData();
     const age = Date.now() - (cachedData.timestamp || 0);
-    const maxAge = 5 * 60 * 1000; // 5 phút cache
+    const maxAge = 5 * 60 * 1000; 
     
     let surveys;
     if (cachedData.data && age < maxAge) {
@@ -64,10 +64,10 @@ async function initializeReport() {
     populateDataTable(surveys);
     
     hideLoadingState();
-    showNotification('✅ Tải dữ liệu thành công!', 'success');
+    showNotification(' Tải dữ liệu thành công!', 'success');
     
   } catch (error) {
-    console.error('❌ Lỗi kết nối Google Sheets:', error);
+    console.error(' Lỗi kết nối Google Sheets:', error);
     
     const cachedData = getCachedData().data;
     if (cachedData && cachedData.length > 0) {
@@ -99,7 +99,7 @@ async function initializeReport() {
   initializeAnimations();
 }
 
-// Lấy dữ liệu từ cache
+
 function getCachedData() {
   try {
     const data = localStorage.getItem('surveyReportData');
@@ -113,7 +113,7 @@ function getCachedData() {
   }
 }
 
-// Validate dữ liệu
+
 function validateSurveyData(data) {
   if (!Array.isArray(data)) return [];
   
@@ -124,7 +124,7 @@ function validateSurveyData(data) {
   });
 }
 
-// Tính toán thống kê (ĐÃ SỬA: Đúng công thức)
+
 function calculateStats(surveys) {
   if (!surveys || surveys.length === 0) {
     return { 
@@ -200,7 +200,7 @@ function calculateStats(surveys) {
   return stats;
 }
 
-// Cập nhật thống kê tổng quan (ĐÃ SỬA: Kiểm tra phần tử tồn tại)
+
 function updateSummaryStats(stats) {
   const totalEl = document.getElementById('summary-total');
   const knowledgeEl = document.getElementById('summary-knowledge');
@@ -227,7 +227,7 @@ function updateExecutiveSummary(stats) {
   summaryElement.textContent = `Dựa trên ${stats.total} khảo sát, kết quả cho thấy người tham gia có mức độ hiểu biết ${stats.knowledgeScore >= 70 ? 'tốt' : stats.knowledgeScore >= 50 ? 'trung bình' : 'hạn chế'} về rác thải nhựa và hành vi ${stats.behaviorScore >= 70 ? 'thân thiện môi trường tốt' : stats.behaviorScore >= 50 ? 'có một số tích cực' : 'cần cải thiện'}.`;
 }
 
-// Tạo biểu đồ nhân khẩu học (ĐÃ SỬA: Kiểm tra phần tử)
+
 function createDemographicsChart(ageDistribution) {
   const chartDom = document.getElementById('demographics-chart');
   if(!chartDom) return;
@@ -254,7 +254,7 @@ function createDemographicsChart(ageDistribution) {
   window.addEventListener('resize', () => myChart.resize());
 }
 
-// Tạo biểu đồ tương quan (ĐÃ SỬA: Kiểm tra phần tử)
+
 function createCorrelationChart(surveys) {
   const chartDom = document.getElementById('correlation-chart');
   if(!chartDom) return;
@@ -304,7 +304,7 @@ function createCorrelationChart(surveys) {
   window.addEventListener('resize', () => myChart.resize());
 }
 
-// Tạo biểu đồ hành vi (ĐÃ SỬA: Mapping giá trị đồng nhất)
+
 function createBehaviorCharts(surveys) {
   if(!surveys || surveys.length === 0) return;
   
@@ -365,7 +365,7 @@ function createBehaviorCharts(surveys) {
   });
 }
 
-// Cập nhật nhận xét (ĐÃ SỬA: Kiểm tra phần tử)
+
 function updateComments(surveys, stats) {
   const kComment = document.getElementById('knowledge-comment');
   const bComment = document.getElementById('behavior-comment');
@@ -383,7 +383,7 @@ function updateComments(surveys, stats) {
   }
 }
 
-// Cập nhật khuyến nghị (ĐÃ SỬA: Đồng bộ với HTML)
+
 function updateRecommendations(stats) {
   const eduContainer = document.getElementById('education-recommendations');
   const policyContainer = document.getElementById('policy-recommendations');
@@ -438,7 +438,7 @@ function updateRecommendations(stats) {
   `).join('');
 }
 
-// Điền bảng dữ liệu (ĐÃ SỬA: Xử lý lỗi tốt hơn)
+
 function populateDataTable(surveys) {
   const tableBody = document.getElementById('survey-data-table');
   if(!tableBody) return;
@@ -536,7 +536,7 @@ function hideLoadingState() {
   // Dữ liệu sẽ được cập nhật bởi các hàm khác
 }
 
-// 3️⃣ ĐÃ SỬA: Notification tốt hơn
+
 function showNotification(message, type = 'info') {
   const oldNotification = document.querySelector('.notification-toast');
   if(oldNotification) oldNotification.remove();
@@ -578,7 +578,7 @@ function showNotification(message, type = 'info') {
   }
 }
 
-// 4️⃣ THÊM: Hàm xuất PDF/Excel
+
 function showPINModal(type) {
   const modal = document.getElementById('pin-modal');
   if(modal) {
@@ -690,7 +690,7 @@ function exportToExcel() {
   showNotification('✅ Xuất Excel thành hình!', 'success');
 }
 
-// 4️⃣ THÊM: Dữ liệu mẫu
+
 function getSampleData() {
   return [
     {
@@ -723,7 +723,7 @@ function getSampleData() {
   ];
 }
 
-// Tạo biểu đồ kiến thức chi tiết (tùy chọn)
+
 function createKnowledgeCharts(surveys) {
   const chartDom = document.getElementById('knowledge-detailed-chart');
   if(!chartDom) return;
@@ -762,7 +762,7 @@ function createKnowledgeCharts(surveys) {
   window.addEventListener('resize', () => myChart.resize());
 }
 
-// 6️⃣ THÊM: Auto-hide modal và focus input
+
 document.addEventListener('click', (e) => {
   const modal = document.getElementById('pin-modal');
   if(modal && !modal.classList.contains('hidden')) {
