@@ -1,5 +1,5 @@
 // 📊 Cấu hình Google Sheets API
-const SHEET_URL = 'https://script.google.com/macros/s/AKfycbxs7bESzPh888xAbzdN627nxAPRzGKXhrmnXlHHBA58P6UbabzVVczvyV26K4LJ6bYX/exec';
+const SHEET_URL = 'https://script.google.com/macros/s/AKfycbwVi1Vk932t9roG8kxbCU1YcZnNaBYhcaYJFcwTCWE4_1SitrKdP78F0XsfLhMEJlr3/exec';
 
 // 🚀 Khởi tạo trang
 document.addEventListener('DOMContentLoaded', function() {
