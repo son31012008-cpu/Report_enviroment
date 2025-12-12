@@ -55,11 +55,11 @@ function updateExecutiveSummary(stats) {
     
     // Knowledge assessment
     if (stats.knowledgeScore >= 70) {
-        summary += `Ngườ tham gia có mức độ hiểu biết tốt về rác thải nhựa (${stats.knowledgeScore}%). `;
+        summary += `Người tham gia có mức độ hiểu biết tốt về rác thải nhựa (${stats.knowledgeScore}%). `;
     } else if (stats.knowledgeScore >= 50) {
         summary += `Mức độ hiểu biết về rác thải nhựa ở mức trung bình (${stats.knowledgeScore}%), cần cải thiện. `;
     } else {
-        summary += `Mức độ hiểu biết về rác thải nhựa còn hạn chế (${stats.knowledgeScore}%), cần tăng cường giáo dục. `;
+        summary += `Mức độ hiểu biết về rác thải nhựa còn hạn chế (${stats.knowledgeScore}%), cần cải thiện hơn. `;
     }
     
     // Behavior assessment
@@ -301,9 +301,9 @@ function updateComments(surveys, stats) {
     if (stats.knowledgeScore >= 70) {
         knowledgeComment.textContent = 'Ngườ tham gia thể hiện kiến thức tốt về rác thải nhựa. Tuy nhiên, vẫn cần tăng cường giáo dục về tác hại cụ thể và cách xử lý.';
     } else if (stats.knowledgeScore >= 50) {
-        knowledgeComment.textContent = 'Kiến thức cơ bản đã có, nhưng cần cải thiện về thờ gian phân hủy và tác động môi trường của rác thải nhựa.';
+        knowledgeComment.textContent = 'Kiến thức cơ bản đã có, nhưng cần cải thiện hiểu biết về thời gian phân hủy và tác động môi trường của rác thải nhựa.';
     } else {
-        knowledgeComment.textContent = 'Kiến thức còn nhiều hạn chế. Cần chương trình giáo dục toàn diện về rác thải nhựa và bảo vệ môi trường.';
+        knowledgeComment.textContent = 'Kiến thức còn nhiều hạn chế. Cần tham gia nhiều hoạt động tình nguyện về rác thải nhựa và bảo vệ môi trường.';
     }
     
     // Behavior comment
@@ -487,7 +487,7 @@ function exportExcel() {
     }
     
     // Create CSV content
-    const headers = ['ID', 'Độ Tuổi', 'Nghề Nghiệp', 'Điểm Kiến Thức', 'Điểm Hành Vi', 'Thờ Gian'];
+    const headers = ['ID', 'Độ Tuổi', 'Nghề Nghiệp', 'Điểm Kiến Thức', 'Điểm Hành Vi', 'Thời Gian'];
     const csvContent = [
         headers.join(','),
         ...surveys.map(survey => {
