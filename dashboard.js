@@ -1,42 +1,84 @@
+// 1. Sửa: Bỏ dấu cách thừa ở cuối URL
 const SHEET_URL = 'https://script.google.com/macros/s/AKfycbwahWIWlY04K9T9yt8REKadzytvZ3hH0V9UytzToO2GTYksmn5MtSUEFuE7YVsaNvgP/exec';
 
 document.addEventListener('DOMContentLoaded', initializeDashboard);
+
+// 2. Thêm: Hàm refreshData để nút làm mới hoạt động
+async function refreshData() {
+  await initializeDashboard();
+}
 
 async function initializeDashboard() {
   showLoadingState();
   try {
     const surveys = await fetchDataFromGoogleSheets();
+    // Lưu vào localStorage sau khi tải thành công
+    localStorage.setItem('surveys', JSON.stringify(surveys));
+    
     const stats = calculateStats(surveys);
     updateStatisticsCards(stats);
     createCharts(surveys, stats);
     updateInsights(stats);
   } catch (error) {
     console.error('❌ Lỗi tải dữ liệu Google Sheets:', error);
+    
     // Fallback to localStorage
     const surveys = getLocalData();
     const stats = calculateStats(surveys);
     updateStatisticsCards(stats);
     createCharts(surveys, stats);
     updateInsights(stats);
-    showNotification('Sử dụng dữ liệu local (không có kết nối Google Sheets)', 'warning');
+    
+    // Chỉ hiện thông báo nếu có dữ liệu local
+    if(surveys.length > 0) {
+      showNotification('Sử dụng dữ liệu local (không có kết nối Google Sheets)', 'warning');
+    }
   } finally {
     hideLoadingState();
   }
 }
 
+// 3. Sửa: Thêm xử lý lỗi mạng và timeout
 async function fetchDataFromGoogleSheets() {
-  const response = await fetch(`${SHEET_URL}?action=getAllData`);
-  const result = await response.json();
-  if (result.status === 'success') return result.data;
-  throw new Error('Failed to fetch data');
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
+  
+  try {
+    const response = await fetch(`${SHEET_URL}?action=getAllData`, {
+      signal: controller.signal
+    });
+    
+    clearTimeout(timeoutId);
+    
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status} - ${response.statusText}`);
+    }
+    
+    const result = await response.json();
+    if (result.status === 'success' && Array.isArray(result.data)) {
+      return result.data;
+    }
+    throw new Error('Invalid data format');
+  } catch (error) {
+    if (error.name === 'AbortError') {
+      throw new Error('Timeout: Google Sheets không phản hồi');
+    }
+    throw error;
+  }
 }
 
 function getLocalData() {
-  return JSON.parse(localStorage.getItem('surveys') || '[]');
+  try {
+    const data = localStorage.getItem('surveys');
+    return data ? JSON.parse(data) : [];
+  } catch {
+    return [];
+  }
 }
 
+// 4. Sửa: Thêm kiểm tra dữ liệu rỗng và fix công thức tính
 function calculateStats(surveys) {
-  if (surveys.length === 0) {
+  if (!surveys || surveys.length === 0) {
     return { total: 0, ageDistribution: {}, occupationDistribution: {}, knowledgeScore: 0, behaviorScore: 0 };
   }
   
@@ -52,54 +94,86 @@ function calculateStats(surveys) {
     if (survey.age) stats.ageDistribution[survey.age] = (stats.ageDistribution[survey.age] || 0) + 1;
     if (survey.occupation) stats.occupationDistribution[survey.occupation] = (stats.occupationDistribution[survey.occupation] || 0) + 1;
     
-    // Knowledge score (câu 1,2,3,9,10,14,18)
+    // Knowledge score (7 câu)
     let knowledgePoints = 0;
     if (survey.q1 === 'a') knowledgePoints += 1;
     if (survey.q2 === 'c') knowledgePoints += 1;
-    if (survey.q3 && (Array.isArray(survey.q3) && survey.q3.includes('d'))) knowledgePoints += 1;
+    if (survey.q3 && Array.isArray(survey.q3) && survey.q3.includes('d')) knowledgePoints += 1;
     if (survey.q9 === 'yes') knowledgePoints += 1;
     if (survey.q10 === 'b') knowledgePoints += 1;
     if (survey.q14 === 'yes') knowledgePoints += 1;
     if (survey.q18 === 'yes') knowledgePoints += 1;
     
-    // Behavior score (câu 4,5,6,7,8,12,13,16,17)
+    // Behavior score (9 câu, mỗi câu tối đa 2 điểm)
     let behaviorPoints = 0;
-    if (survey.q4 === 'rarely') behaviorPoints += 2; else if (survey.q4 === 'monthly') behaviorPoints += 1;
-    if (survey.q5 === 'always') behaviorPoints += 2; else if (survey.q5 === 'sometimes') behaviorPoints += 1;
-    if (survey.q6 === 'always') behaviorPoints += 2; else if (survey.q6 === 'sometimes') behaviorPoints += 1;
-    if (survey.q7 === 'rarely') behaviorPoints += 2; else if (survey.q7 === 'monthly') behaviorPoints += 1;
-    if (survey.q8 === 'always') behaviorPoints += 2; else if (survey.q8 === 'sometimes') behaviorPoints += 1;
-    if (survey.q12 === 'rarely') behaviorPoints += 2; else if (survey.q12 === 'monthly') behaviorPoints += 1;
-    if (survey.q13 === 'avoid') behaviorPoints += 2; else if (survey.q13 === 'sometimes') behaviorPoints += 1;
-    if (survey.q16 === 'never') behaviorPoints += 2; else if (survey.q16 === 'rarely') behaviorPoints += 1;
-    if (survey.q17 === 'always') behaviorPoints += 2; else if (survey.q17 === 'sometimes') behaviorPoints += 1;
+    if (survey.q4 === 'rarely' || survey.q4 === 'never') behaviorPoints += 2; 
+    else if (survey.q4 === 'monthly') behaviorPoints += 1;
+    
+    if (survey.q5 === 'always') behaviorPoints += 2; 
+    else if (survey.q5 === 'sometimes') behaviorPoints += 1;
+    
+    if (survey.q6 === 'always') behaviorPoints += 2; 
+    else if (survey.q6 === 'sometimes') behaviorPoints += 1;
+    
+    if (survey.q7 === 'rarely' || survey.q7 === 'never') behaviorPoints += 2; 
+    else if (survey.q7 === 'monthly') behaviorPoints += 1;
+    
+    if (survey.q8 === 'always') behaviorPoints += 2; 
+    else if (survey.q8 === 'sometimes') behaviorPoints += 1;
+    
+    if (survey.q12 === 'rarely' || survey.q12 === 'never') behaviorPoints += 2; 
+    else if (survey.q12 === 'monthly') behaviorPoints += 1;
+    
+    if (survey.q13 === 'avoid') behaviorPoints += 2; 
+    else if (survey.q13 === 'sometimes') behaviorPoints += 1;
+    
+    if (survey.q16 === 'never') behaviorPoints += 2; 
+    else if (survey.q16 === 'rarely') behaviorPoints += 1;
+    
+    if (survey.q17 === 'always') behaviorPoints += 2; 
+    else if (survey.q17 === 'sometimes') behaviorPoints += 1;
     
     stats.knowledgeScore += knowledgePoints;
     stats.behaviorScore += behaviorPoints;
   });
   
-  stats.knowledgeScore = Math.round((stats.knowledgeScore / (surveys.length * 7)) * 100);
-  stats.behaviorScore = Math.round((stats.behaviorScore / (surveys.length * 9)) * 100);
+  // Tính trung bình phần trăm (fix lỗi chia cho 0)
+  const maxKnowledgePoints = stats.total * 7;
+  const maxBehaviorPoints = stats.total * 9 * 2; // 9 câu * 2 điểm
+  
+  stats.knowledgeScore = maxKnowledgePoints > 0 ? Math.round((stats.knowledgeScore / maxKnowledgePoints) * 100) : 0;
+  stats.behaviorScore = maxBehaviorPoints > 0 ? Math.round((stats.behaviorScore / maxBehaviorPoints) * 100) : 0;
   
   return stats;
 }
 
+// 5. Sửa: Thêm kiểm tra phần tử tồn tại
 function updateStatisticsCards(stats) {
-  document.getElementById('total-surveys').textContent = stats.total;
-  document.getElementById('knowledge-score').textContent = stats.knowledgeScore + '%';
-  document.getElementById('behavior-score').textContent = stats.behaviorScore + '%';
-  document.getElementById('participation-rate').textContent = Math.min(100, Math.round(stats.total * 2.5)) + '%';
+  const totalEl = document.getElementById('total-surveys');
+  const knowledgeEl = document.getElementById('knowledge-score');
+  const behaviorEl = document.getElementById('behavior-score');
+  const participationEl = document.getElementById('participation-rate');
+  
+  if(totalEl) totalEl.textContent = stats.total;
+  if(knowledgeEl) knowledgeEl.textContent = stats.knowledgeScore + '%';
+  if(behaviorEl) behaviorEl.textContent = stats.behaviorScore + '%';
+  if(participationEl) participationEl.textContent = Math.min(100, Math.round(stats.total * 2.5)) + '%';
 }
 
 function createCharts(surveys, stats) {
+  if(!surveys || surveys.length === 0) return;
+  
   createAgeChart(stats.ageDistribution);
   createOccupationChart(stats.occupationDistribution);
   createKnowledgeChart(surveys);
   createBehaviorChart(surveys);
 }
 
+// 6. Sửa: Thêm kiểm tra phần tử chart tồn tại
 function createAgeChart(ageDistribution) {
   const chartDom = document.getElementById('age-chart');
+  if(!chartDom) return;
+  
   const myChart = echarts.init(chartDom);
   const data = Object.entries(ageDistribution).map(([key, value]) => ({ name: getAgeLabel(key), value }));
   
@@ -113,6 +187,8 @@ function createAgeChart(ageDistribution) {
 
 function createOccupationChart(occupationDistribution) {
   const chartDom = document.getElementById('occupation-chart');
+  if(!chartDom) return;
+  
   const myChart = echarts.init(chartDom);
   const data = Object.entries(occupationDistribution).map(([key, value]) => ({ name: getOccupationLabel(key), value }));
   
@@ -126,7 +202,10 @@ function createOccupationChart(occupationDistribution) {
 
 function createKnowledgeChart(surveys) {
   const chartDom = document.getElementById('knowledge-chart');
+  if(!chartDom) return;
+  
   const myChart = echarts.init(chartDom);
+  const total = surveys.length || 1; // Tránh chia cho 0
   
   const correct = {
     'Định nghĩa': surveys.filter(s => s.q1 === 'a').length,
@@ -140,7 +219,7 @@ function createKnowledgeChart(surveys) {
   
   const data = Object.entries(correct).map(([key, value]) => ({
     name: key,
-    value: Math.round((value / surveys.length) * 100)
+    value: Math.round((value / total) * 100)
   }));
   
   myChart.setOption({
@@ -158,24 +237,44 @@ function createKnowledgeChart(surveys) {
   window.addEventListener('resize', () => myChart.resize());
 }
 
+// 7. Sửa: Thứ tự dữ liệu trong biểu đồ hành vi
 function createBehaviorChart(surveys) {
   const chartDom = document.getElementById('behavior-chart');
+  if(!chartDom) return;
+  
   const myChart = echarts.init(chartDom);
   
+  // Đặt đúng thứ tự: Luôn, Thỉnh thoảng, Hiếm khi, Không
   const behavior = {
-    'Sử dụng 1 lần': { daily: 0, weekly: 0, monthly: 0, rarely: 0 },
+    'Sử dụng 1 lần': { always: 0, sometimes: 0, rarely: 0, never: 0 }, // daily->always, weekly->sometimes
     'Phân loại rác': { always: 0, sometimes: 0, rarely: 0, never: 0 },
     'Mang túi vải': { always: 0, sometimes: 0, rarely: 0, never: 0 }
   };
   
-  surveys.forEach(s => { if (s.q4) behavior['Sử dụng 1 lần'][s.q4]++; });
-  surveys.forEach(s => { if (s.q5) behavior['Phân loại rác'][s.q5]++; });
-  surveys.forEach(s => { if (s.q6) behavior['Mang túi vải'][s.q6]++; });
+  // Ánh xạ giá trị từ form sang thứ tự đồng nhất
+  const valueMap = {
+    'daily': 'always',
+    'weekly': 'sometimes',
+    'monthly': 'rarely',
+    'rarely': 'rarely',
+    'never': 'never',
+    'always': 'always',
+    'sometimes': 'sometimes',
+    'avoid': 'always', // Tránh = Luôn (tốt)
+    'often': 'sometimes', // Thường xuyên = Thỉnh thoảng
+    'reduce': 'rarely' // Giảm = Hiếm khi
+  };
+  
+  surveys.forEach(s => {
+    if (s.q4 && valueMap[s.q4]) behavior['Sử dụng 1 lần'][valueMap[s.q4]]++;
+    if (s.q5 && valueMap[s.q5]) behavior['Phân loại rác'][valueMap[s.q5]]++;
+    if (s.q6 && valueMap[s.q6]) behavior['Mang túi vải'][valueMap[s.q6]]++;
+  });
   
   myChart.setOption({
     tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
-    legend: { data: ['Sử dụng 1 lần', 'Phân loại rác', 'Mang túi vải'] },
-    grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true },
+    legend: { data: ['Sử dụng 1 lần', 'Phân loại rác', 'Mang túi vải'], bottom: 0 },
+    grid: { left: '3%', right: '4%', bottom: '15%', containLabel: true },
     xAxis: { type: 'category', data: ['Luôn', 'Thỉnh thoảng', 'Hiếm khi', 'Không'] },
     yAxis: { type: 'value' },
     series: [
@@ -187,50 +286,92 @@ function createBehaviorChart(surveys) {
   window.addEventListener('resize', () => myChart.resize());
 }
 
+// 8. Sửa: Thêm kiểm tra phần tử insight tồn tại
 function updateInsights(stats) {
   const kInsight = document.getElementById('knowledge-insight');
   const bInsight = document.getElementById('behavior-insight');
   const tInsight = document.getElementById('trend-insight');
   
-  kInsight.textContent = stats.knowledgeScore >= 70 ? 'Kiến thức tốt về rác thải nhựa' :
-                          stats.knowledgeScore >= 50 ? 'Kiến thức cơ bản cần cải thiện' :
-                          'Bạn cần tìm hiểu thêm về kiến thức cơ bản về rác thải nhựa';
+  if(kInsight) {
+    kInsight.textContent = stats.knowledgeScore >= 70 ? 'Kiến thức tốt về rác thải nhựa' :
+                            stats.knowledgeScore >= 50 ? 'Kiến thức cơ bản cần cải thiện' :
+                            'Cần tìm hiểu thêm về kiến thức cơ bản về rác thải nhựa';
+  }
   
-  bInsight.textContent = stats.behaviorScore >= 70 ? 'Hành vi thân thiện môi trường tốt' :
-                          stats.behaviorScore >= 50 ? 'Có một số hành vi tích cực' :
-                          'Cần thay đổi thói quen sử dụng nhựa';
+  if(bInsight) {
+    bInsight.textContent = stats.behaviorScore >= 70 ? 'Hành vi thân thiện môi trường tốt' :
+                            stats.behaviorScore >= 50 ? 'Có một số hành vi tích cực' :
+                            'Cần thay đổi thói quen sử dụng nhựa';
+  }
   
-  tInsight.textContent = stats.total > 20 ? 'Có xu hướng tăng nhận thức' :
-                          'Cần thêm dữ liệu để đánh giá xu hướng';
+  if(tInsight) {
+    tInsight.textContent = stats.total > 20 ? 'Có xu hướng tăng nhận thức' :
+                            'Cần thêm dữ liệu để đánh giá xu hướng';
+  }
 }
 
+// 9. Sửa: Thêm kiểm tra button tồn tại
 function showLoadingState() {
-  document.getElementById('refresh-btn').innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Đang tải...';
-  document.getElementById('refresh-btn').disabled = true;
+  const btn = document.getElementById('refresh-btn');
+  if(btn) {
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Đang tải...';
+    btn.disabled = true;
+  }
 }
 
 function hideLoadingState() {
-  document.getElementById('refresh-btn').innerHTML = '<i class="fas fa-sync-alt mr-2"></i>Làm Mới Dữ Liệu';
-  document.getElementById('refresh-btn').disabled = false;
+  const btn = document.getElementById('refresh-btn');
+  if(btn) {
+    btn.innerHTML = '<i class="fas fa-sync-alt mr-2"></i>Làm Mới Dữ Liệu';
+    btn.disabled = false;
+  }
 }
 
+// 10. Sửa: Cải tiến notification và thêm fallback nếu anime.js lỗi
 function showNotification(message, type = 'info') {
+  // Xóa thông báo cũ nếu có
+  const oldNotification = document.querySelector('.notification-toast');
+  if(oldNotification) oldNotification.remove();
+  
   const notification = document.createElement('div');
-  notification.className = `fixed top-4 right-4 px-6 py-4 rounded-lg shadow-lg z-50 ${type === 'warning' ? 'bg-yellow-500' : 'bg-green-500'} text-white`;
-  notification.textContent = message;
+  notification.className = `notification-toast fixed top-4 right-4 px-6 py-4 rounded-lg shadow-lg z-50 text-white max-w-sm`;
+  
+  const colors = {
+    'info': 'bg-blue-500',
+    'success': 'bg-green-500',
+    'warning': 'bg-yellow-500',
+    'error': 'bg-red-500'
+  };
+  notification.classList.add(colors[type] || colors.info);
+  
+  notification.innerHTML = `
+    <div class="flex items-center">
+      <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'warning' ? 'exclamation-triangle' : type === 'error' ? 'times-circle' : 'info-circle'} mr-3"></i>
+      <span>${message}</span>
+    </div>
+  `;
+  
   document.body.appendChild(notification);
-  anime({ targets: notification, opacity: [0, 1], translateX: [100, 0], duration: 500 });
-  setTimeout(() => {
-    anime({ targets: notification, opacity: [1, 0], translateX: [0, 100], duration: 500, complete: () => document.body.removeChild(notification) });
-  }, 3000);
+  
+  // Hiệu ứng
+  if(typeof anime !== 'undefined') {
+    anime({ targets: notification, opacity: [0, 1], translateX: [100, 0], duration: 500 });
+    setTimeout(() => {
+      anime({ targets: notification, opacity: [1, 0], translateX: [0, 100], duration: 500, complete: () => notification.remove() });
+    }, 4000);
+  } else {
+    // Fallback nếu anime.js không tải được
+    notification.style.opacity = '1';
+    setTimeout(() => notification.remove(), 4000);
+  }
 }
 
 function getAgeLabel(key) {
-  const labels = { '18-24': '18-24 tuổi', '25-34': '25-34 tuổi', '35-44': '35-44 tuổi', '45-54': '45-54 tuổi', '55+': '55 tuổi trở lên' };
-  return labels[key] || key;
+  const labels = { '18-24': '18-24 tuổi', '25-34': '25-34 tuổi', '35-44': '35-44 tuổi', '45-54': '45-54 tuổi', '55+': '55 tuổi trở lên', 'under18': 'Dưới 18 tuổi' };
+  return labels[key] || key || 'Không xác định';
 }
 
 function getOccupationLabel(key) {
-  const labels = { 'student': 'Học sinh/SV', 'employee': 'Nhân viên', 'business': 'Kinh doanh', 'freelance': 'Tự do', 'other': 'Khác' };
-  return labels[key] || key;
+  const labels = { 'student': 'Học sinh/SV', 'employee': 'Nhân viên', 'business': 'Kinh doanh', 'freelance': 'Tự do', 'other': 'Khác', 'unemployed': 'Thất nghiệp', 'retired': 'Đã nghỉ hưu' };
+  return labels[key] || key || 'Không xác định';
 }
