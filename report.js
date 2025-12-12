@@ -1,11 +1,11 @@
 // 📊 URL Google Sheets API - ĐÃ BỎ DẤU CÁCH THỪA
 const SHEET_URL = 'https://script.google.com/macros/s/AKfycbwahWIWlY04K9T9yt8REKadzytvZ3hH0V9UytzToO2GTYksmn5MtSUEFuE7YVsaNvgP/exec';
+const PIN = 'sangtaothaiphien_vuminhson_12_5'; // PIN để xuất báo cáo
 
 document.addEventListener('DOMContentLoaded', initializeReport);
 
 // 1️⃣ THÊM: Hàm refreshData để nút làm mới hoạt động
 async function refreshData() {
-  // Xóa cache để buộc tải mới
   localStorage.removeItem('surveyReportData');
   localStorage.removeItem('lastFetchTime');
   await initializeReport();
@@ -15,7 +15,6 @@ async function refreshData() {
 async function initializeReport() {
   showLoadingState();
   try {
-    // Kiểm tra cache trước
     const cachedData = getCachedData();
     const age = Date.now() - (cachedData.timestamp || 0);
     const maxAge = 5 * 60 * 1000; // 5 phút cache
@@ -25,13 +24,12 @@ async function initializeReport() {
       surveys = cachedData.data;
       showNotification('Sử dụng dữ liệu đã cache', 'info');
     } else {
-      // ✅ Thêm timeout và kiểm tra response
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
+      const timeoutId = setTimeout(() => controller.abort(), 10000);
       
       const response = await fetch(`${SHEET_URL}?action=getAllData`, { 
         signal: controller.signal,
-        cache: 'no-store' // Không dùng browser cache
+        cache: 'no-store'
       });
       
       clearTimeout(timeoutId);
@@ -44,7 +42,6 @@ async function initializeReport() {
       
       if (result.status === 'success' && Array.isArray(result.data)) {
         surveys = validateSurveyData(result.data);
-        // Lưu cache
         localStorage.setItem('surveyReportData', JSON.stringify(surveys));
         localStorage.setItem('lastFetchTime', Date.now().toString());
       } else {
@@ -52,7 +49,6 @@ async function initializeReport() {
       }
     }
     
-    // Kiểm tra dữ liệu rỗng
     if (surveys.length === 0) {
       throw new Error('Không có dữ liệu khảo sát nào');
     }
@@ -62,7 +58,6 @@ async function initializeReport() {
     updateSummaryStats(stats);
     createDemographicsChart(stats.ageDistribution);
     createCorrelationChart(surveys);
-    createKnowledgeCharts(surveys);
     createBehaviorCharts(surveys);
     updateComments(surveys, stats);
     updateRecommendations(stats);
@@ -74,7 +69,6 @@ async function initializeReport() {
   } catch (error) {
     console.error('❌ Lỗi kết nối Google Sheets:', error);
     
-    // Fallback dữ liệu mẫu nếu không có gì
     const cachedData = getCachedData().data;
     if (cachedData && cachedData.length > 0) {
       showNotification('⚠️ Đang dùng dữ liệu cache cũ', 'warning');
@@ -82,7 +76,6 @@ async function initializeReport() {
       updateSummaryStats(stats);
       createDemographicsChart(stats.ageDistribution);
       createCorrelationChart(cachedData);
-      createKnowledgeCharts(cachedData);
       createBehaviorCharts(cachedData);
       updateComments(cachedData, stats);
       updateRecommendations(stats);
@@ -94,7 +87,6 @@ async function initializeReport() {
       updateSummaryStats(stats);
       createDemographicsChart(stats.ageDistribution);
       createCorrelationChart(sampleSurveys);
-      createKnowledgeCharts(sampleSurveys);
       createBehaviorCharts(sampleSurveys);
       updateComments(sampleSurveys, stats);
       updateRecommendations(stats);
@@ -125,7 +117,6 @@ function getCachedData() {
 function validateSurveyData(data) {
   if (!Array.isArray(data)) return [];
   
-  // Lọc bỏ bản ghi trống và validate
   return data.filter(survey => {
     return survey && 
            typeof survey === 'object' && 
@@ -157,7 +148,7 @@ function calculateStats(surveys) {
     if (survey.age) stats.ageDistribution[survey.age] = (stats.ageDistribution[survey.age] || 0) + 1;
     if (survey.occupation) stats.occupationDistribution[survey.occupation] = (stats.occupationDistribution[survey.occupation] || 0) + 1;
     
-    // Knowledge score (7 câu: 1,2,3,4,5,6,18)
+    // Knowledge score (7 câu)
     let knowledgePoints = 0;
     if (survey.q1 === 'a') knowledgePoints++;
     if (survey.q2 === 'c') knowledgePoints++;
@@ -200,9 +191,8 @@ function calculateStats(surveys) {
     stats.behaviorScore += behaviorPoints;
   });
   
-  // Tính phần trăm chính xác
   const maxKnowledge = stats.total * 7;
-  const maxBehavior = stats.total * 9 * 2; // 9 câu * 2 điểm
+  const maxBehavior = stats.total * 9 * 2;
   
   stats.knowledgeScore = maxKnowledge > 0 ? Math.round((stats.knowledgeScore / maxKnowledge) * 100) : 0;
   stats.behaviorScore = maxBehavior > 0 ? Math.round((stats.behaviorScore / maxBehavior) * 100) : 0;
@@ -264,14 +254,13 @@ function createDemographicsChart(ageDistribution) {
   window.addEventListener('resize', () => myChart.resize());
 }
 
-// 2️⃣ ĐÃ SỬA: Mapping dữ liệu cho biểu đồ tương quan
+// Tạo biểu đồ tương quan (ĐÃ SỬA: Kiểm tra phần tử)
 function createCorrelationChart(surveys) {
   const chartDom = document.getElementById('correlation-chart');
   if(!chartDom) return;
   
   const myChart = echarts.init(chartDom);
   
-  // Kiểm tra dữ liệu đủ để vẽ
   if(!surveys || surveys.length < 2) {
     myChart.setOption({
       title: { text: 'Cần ít nhất 2 bản ghi để hiển thị tương quan', left: 'center', top: 'middle' }
@@ -319,7 +308,6 @@ function createCorrelationChart(surveys) {
 function createBehaviorCharts(surveys) {
   if(!surveys || surveys.length === 0) return;
   
-  // Mapping từ form sang hiển thị đồng nhất
   const valueMap = {
     'daily': 'Luôn',
     'weekly': 'Thỉnh thoảng', 
@@ -328,12 +316,11 @@ function createBehaviorCharts(surveys) {
     'never': 'Không',
     'always': 'Luôn',
     'sometimes': 'Thỉnh thoảng',
-    'avoid': 'Luôn', // Tốt = luôn
+    'avoid': 'Luôn',
     'often': 'Thỉnh thoảng',
     'reduce': 'Hiếm khi'
   };
   
-  // Tần suất sử dụng
   const usageData = { 'Luôn': 0, 'Thỉnh thoảng': 0, 'Hiếm khi': 0, 'Không': 0 };
   surveys.forEach(s => {
     if(s.q7) {
@@ -353,7 +340,6 @@ function createBehaviorCharts(surveys) {
     }]
   });
   
-  // Hành vi phân loại
   const sortingData = { 'Luôn': 0, 'Thỉnh thoảng': 0, 'Hiếm khi': 0, 'Không': 0 };
   surveys.forEach(s => {
     if(s.q8) {
@@ -397,47 +383,58 @@ function updateComments(surveys, stats) {
   }
 }
 
-// Cập nhật khuyến nghị (ĐÃ SỬA: Logic phù hợp với survey)
+// Cập nhật khuyến nghị (ĐÃ SỬA: Đồng bộ với HTML)
 function updateRecommendations(stats) {
-  const container = document.getElementById('recommendations-list');
-  if(!container) return;
+  const eduContainer = document.getElementById('education-recommendations');
+  const policyContainer = document.getElementById('policy-recommendations');
   
-  const recommendations = [];
+  if(!eduContainer || !policyContainer) return;
+  
+  const recommendations = {
+    education: [],
+    policy: []
+  };
   
   if(stats.knowledgeScore < 50) {
-    recommendations.push({
+    recommendations.education.push({
       priority: 'Cao',
       content: 'Tăng cường giáo dục nhận thức về tác hại của rác thải nhựa'
     });
   }
   
   if(stats.behaviorScore < 50) {
-    recommendations.push({
+    recommendations.policy.push({
       priority: 'Cao',
       content: 'Phát động chiến dịch thay đổi hành vi sử dụng đồ nhựa'
     });
   }
   
-  if(stats.knowledgeScore >= 70 && stats.behaviorScore >= 70) {
-    recommendations.push({
+  if(recommendations.education.length === 0) {
+    recommendations.education.push({
       priority: 'Trung bình',
-      content: 'Duy trì và nhân rộng mô hình hành vi tích cực'
+      content: 'Tiếp tục giáo dục về phân loại rác'
     });
   }
   
-  // Mặc định nếu không có gì
-  if(recommendations.length === 0) {
-    recommendations.push({
+  if(recommendations.policy.length === 0) {
+    recommendations.policy.push({
       priority: 'Trung bình',
-      content: 'Tiếp tục theo dõi và cải thiện nhận thức cộng đồng'
+      content: 'Khuyến khích sử dụng túi vải'
     });
   }
   
-  container.innerHTML = recommendations.map(rec => `
-    <div class="border-l-4 ${rec.priority === 'Cao' ? 'border-red-500' : 'border-yellow-500'} pl-4 py-2">
-      <span class="text-sm font-semibold ${rec.priority === 'Cao' ? 'text-red-600' : 'text-yellow-600'}">Ưu tiên ${rec.priority}:</span>
-      <p class="text-gray-700 mt-1">${rec.content}</p>
-    </div>
+  eduContainer.innerHTML = recommendations.education.map(rec => `
+    <li class="flex items-start">
+      <i class="fas fa-check text-green-600 mr-2 mt-1"></i>
+      <span><span class="text-sm font-semibold ${rec.priority === 'Cao' ? 'text-red-600' : 'text-yellow-600'}">[Ưu tiên ${rec.priority}]</span> ${rec.content}</span>
+    </li>
+  `).join('');
+  
+  policyContainer.innerHTML = recommendations.policy.map(rec => `
+    <li class="flex items-start">
+      <i class="fas fa-check text-green-600 mr-2 mt-1"></i>
+      <span><span class="text-sm font-semibold ${rec.priority === 'Cao' ? 'text-red-600' : 'text-yellow-600'}">[Ưu tiên ${rec.priority}]</span> ${rec.content}</span>
+    </li>
   `).join('');
 }
 
@@ -452,7 +449,6 @@ function populateDataTable(surveys) {
   }
   
   const rows = surveys.slice(0, 50).map((survey, index) => {
-    // Tính điểm cho từng hàng
     let knowledgePoints = 0;
     if (survey.q1 === 'a') knowledgePoints++;
     if (survey.q2 === 'c') knowledgePoints++;
@@ -464,7 +460,6 @@ function populateDataTable(surveys) {
     
     const knowledgeScore = Math.round((knowledgePoints / 3) * 100);
     const behaviorScore = Math.round((behaviorPoints / 4) * 100);
-    
     const timestamp = survey.timestamp ? new Date(survey.timestamp).toLocaleString('vi-VN') : 'N/A';
     
     return `
@@ -541,9 +536,8 @@ function hideLoadingState() {
   // Dữ liệu sẽ được cập nhật bởi các hàm khác
 }
 
-// 3️⃣ ĐÃ SỬA: Notification tốt hơn với nhiều kiểu
+// 3️⃣ ĐÃ SỬA: Notification tốt hơn
 function showNotification(message, type = 'info') {
-  // Xóa thông báo cũ
   const oldNotification = document.querySelector('.notification-toast');
   if(oldNotification) oldNotification.remove();
   
@@ -584,7 +578,119 @@ function showNotification(message, type = 'info') {
   }
 }
 
-// 4️⃣ THÊM: Dữ liệu mẫu để test
+// 4️⃣ THÊM: Hàm xuất PDF/Excel
+function showPINModal(type) {
+  const modal = document.getElementById('pin-modal');
+  if(modal) {
+    modal.classList.remove('hidden');
+    modal.dataset.exportType = type;
+    document.getElementById('pin-input')?.focus();
+  }
+}
+
+function closePINModal() {
+  const modal = document.getElementById('pin-modal');
+  const input = document.getElementById('pin-input');
+  const error = document.getElementById('pin-error');
+  
+  if(modal) modal.classList.add('hidden');
+  if(input) input.value = '';
+  if(error) error.classList.add('hidden');
+}
+
+function verifyPIN() {
+  const input = document.getElementById('pin-input');
+  const error = document.getElementById('pin-error');
+  const modal = document.getElementById('pin-modal');
+  
+  if(!input || !modal) return;
+  
+  const pin = input.value.trim();
+  
+  if(pin === PIN) {
+    closePINModal();
+    const exportType = modal.dataset.exportType;
+    
+    if(exportType === 'pdf') {
+      exportToPDF();
+    } else if(exportType === 'excel') {
+      exportToExcel();
+    }
+  } else {
+    if(error) error.classList.remove('hidden');
+    if(input) {
+      input.value = '';
+      input.focus();
+    }
+  }
+}
+
+document.addEventListener('keydown', (e) => {
+  if(e.key === 'Escape') {
+    closePINModal();
+  }
+});
+
+function printReport() {
+  window.print();
+}
+
+function exportToPDF() {
+  const { jsPDF } = window.jspdf;
+  if(!jsPDF) {
+    showNotification('Thư viện jsPDF chưa tải xong', 'error');
+    return;
+  }
+  
+  const doc = new jsPDF();
+  
+  doc.setFontSize(20);
+  doc.text('EcoSurvey - Báo Cáo Chi Tiết', 105, 20, { align: 'center' });
+  
+  doc.setFontSize(12);
+  doc.text(`Ngày xuất: ${new Date().toLocaleDateString('vi-VN')}`, 20, 40);
+  
+  const total = document.getElementById('summary-total')?.textContent || '0';
+  const knowledge = document.getElementById('summary-knowledge')?.textContent || '0%';
+  const behavior = document.getElementById('summary-behavior')?.textContent || '0%';
+  
+  doc.text(`Tổng số khảo sát: ${total}`, 20, 50);
+  doc.text(`Điểm kiến thức TB: ${knowledge}`, 20, 60);
+  doc.text(`Điểm hành vi TB: ${behavior}`, 20, 70);
+  
+  doc.save('EcoSurvey_Report.pdf');
+  showNotification('✅ Xuất PDF thành công!', 'success');
+}
+
+function exportToExcel() {
+  const surveys = JSON.parse(localStorage.getItem('surveyReportData') || '[]');
+  
+  if(!surveys || surveys.length === 0) {
+    showNotification('Không có dữ liệu để xuất', 'error');
+    return;
+  }
+  
+  const headers = ['ID', 'Tuổi', 'Nghề nghiệp', 'Thời gian'];
+  const csvContent = [
+    headers.join(','),
+    ...surveys.map(s => [
+      s.id || 'N/A',
+      s.age || 'N/A',
+      s.occupation || 'N/A',
+      s.timestamp || 'N/A'
+    ].join(','))
+  ].join('\n');
+  
+  const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = 'EcoSurvey_Data.csv';
+  link.click();
+  
+  showNotification('✅ Xuất Excel thành hình!', 'success');
+}
+
+// 4️⃣ THÊM: Dữ liệu mẫu
 function getSampleData() {
   return [
     {
@@ -617,7 +723,7 @@ function getSampleData() {
   ];
 }
 
-// Tạo biểu đồ kiến thức (THÊM vào nếu cần)
+// Tạo biểu đồ kiến thức chi tiết (tùy chọn)
 function createKnowledgeCharts(surveys) {
   const chartDom = document.getElementById('knowledge-detailed-chart');
   if(!chartDom) return;
@@ -655,3 +761,21 @@ function createKnowledgeCharts(surveys) {
   
   window.addEventListener('resize', () => myChart.resize());
 }
+
+// 6️⃣ THÊM: Auto-hide modal và focus input
+document.addEventListener('click', (e) => {
+  const modal = document.getElementById('pin-modal');
+  if(modal && !modal.classList.contains('hidden')) {
+    const modalContent = modal.querySelector('div > div');
+    if(modalContent && !modalContent.contains(e.target)) {
+      closePINModal();
+    }
+  }
+});
+
+document.getElementById('pin-modal')?.addEventListener('transitionend', () => {
+  const input = document.getElementById('pin-input');
+  if(input && !document.getElementById('pin-modal').classList.contains('hidden')) {
+    input.focus();
+  }
+});
