@@ -207,13 +207,13 @@ function createKnowledgeChart(surveys) {
   const total = surveys.length || 1; 
   
   const correct = {
-    'Định nghĩa': surveys.filter(s => s.q1 === 'a').length,
-    'Thời gian phân hủy': surveys.filter(s => s.q2 === 'c').length,
-    'Tác hại': surveys.filter(s => s.q3 && Array.isArray(s.q3) && s.q3.includes('d')).length,
-    'Biểu tượng tái chế': surveys.filter(s => s.q9 === 'yes').length,
-    'PET tái chế': surveys.filter(s => s.q10 === 'b').length,
-    'Nhựa sinh học': surveys.filter(s => s.q14 === 'yes').length,
-    'Ký hiệu số': surveys.filter(s => s.q18 === 'yes').length
+    'Kiến thức tổng quát': surveys.filter(s => s.q1 === 'a').length,
+    'Kiến thức về thời gian phân hủy': surveys.filter(s => s.q2 === 'c').length,
+    'Kiến thức về Tác hại': surveys.filter(s => s.q3 && Array.isArray(s.q3) && s.q3.includes('d')).length,
+    'Kiến thức về biểu tượng tái chế': surveys.filter(s => s.q9 === 'yes').length,
+    'Kiến thức về nhựa PET tái chế': surveys.filter(s => s.q10 === 'b').length,
+    'Kiến thức về nhựa sinh học': surveys.filter(s => s.q14 === 'yes').length,
+    'Kiến thức về ký hiệu số trên chai nhựa': surveys.filter(s => s.q18 === 'yes').length
   };
   
   const data = Object.entries(correct).map(([key, value]) => ({
