@@ -4,13 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Báo Cáo Chi Tiết - EcoSurvey</title>
-    <script src="https://cdn.tailwindcss.com "></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js "></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.4.3/echarts.min.js "></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js "></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css " rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.4.3/echarts.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300 ;400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
         
         * {
             font-family: 'Inter', sans-serif;
@@ -149,39 +149,31 @@
                 </div>
             </div>
 
-            <!-- Knowledge Assessment -->
+            <!-- Knowledge Assessment - ĐÃ SỬA THEO YÊU CẦU -->
             <div class="bg-white p-8 rounded-xl shadow-lg section-card mb-8">
                 <h3 class="text-2xl font-semibold text-gray-800 mb-6">
                     <i class="fas fa-graduation-cap text-indigo-600 mr-3"></i>
                     Đánh Giá Kiến Thức
                 </h3>
                 
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                <!-- SỬA TỪ 3 CỘNG THÀNH 2 CỘNG -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                     <div class="text-center">
                         <div class="p-4 bg-blue-100 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center">
-                            <i class="fas fa-question text-blue-600 text-2xl"></i>
+                            <i class="fas fa-chart-pie text-blue-600 text-2xl"></i>
                         </div>
-                        <h4 class="font-semibold text-gray-800 mb-2">Câu 1: Định Nghĩa</h4>
-                        <div id="q1-score" class="text-2xl font-bold text-blue-600">0%</div>
-                        <p class="text-sm text-gray-600">trả lởi đúng</p>
+                        <h4 class="font-semibold text-gray-800 mb-2">Tổng Quan</h4>
+                        <div id="overall-score" class="text-2xl font-bold text-blue-600">0%</div>
+                        <p class="text-sm text-gray-600">điểm trung bình</p>
                     </div>
                     
                     <div class="text-center">
                         <div class="p-4 bg-green-100 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center">
-                            <i class="fas fa-clock text-green-600 text-2xl"></i>
+                            <i class="fas fa-graduation-cap text-green-600 text-2xl"></i>
                         </div>
-                        <h4 class="font-semibold text-gray-800 mb-2">Câu 2: Thời Gian</h4>
-                        <div id="q2-score" class="text-2xl font-bold text-green-600">0%</div>
-                        <p class="text-sm text-gray-600">trả lởi đúng</p>
-                    </div>
-                    
-                    <div class="text-center">
-                        <div class="p-4 bg-orange-100 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center">
-                            <i class="fas fa-exclamation-triangle text-orange-600 text-2xl"></i>
-                        </div>
-                        <h4 class="font-semibold text-gray-800 mb-2">Câu 3: Tác Hại</h4>
-                        <div id="q3-score" class="text-2xl font-bold text-orange-600">0%</div>
-                        <p class="text-sm text-gray-600">trả lởi đúng</p>
+                        <h4 class="font-semibold text-gray-800 mb-2">Kiến Thức</h4>
+                        <div id="detailed-knowledge-score" class="text-2xl font-bold text-green-600">0%</div>
+                        <p class="text-sm text-gray-600">chi tiết câu hỏi</p>
                     </div>
                 </div>
 
