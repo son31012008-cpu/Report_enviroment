@@ -1,3 +1,4 @@
+
 // 📊 Cấu hình Google Sheets API
 const SHEET_URL = 'https://script.google.com/macros/s/AKfycbwahWIWlY04K9T9yt8REKadzytvZ3hH0V9UytzToO2GTYksmn5MtSUEFuE7YVsaNvgP/exec'; // THAY BẰNG URL CỦA BẠN
 
@@ -7,27 +8,41 @@ document.addEventListener('DOMContentLoaded', initializeReport);
 async function initializeReport() {
   showLoadingState();
   try {
-    const surveys = await fetchDataFromGoogleSheets();
-    const stats = calculateStats(surveys);
+    // ✅ ĐÃ FIX: Thêm ?action=getAllData và mode: 'no-cors'
+    const response = await fetch(`${SHEET_URL}?action=getAllData`, {
+      method: 'GET',
+      mode: 'no-cors',  // <- QUAN TRỌNG: Tránh lỗi CORS
+      headers: {
+        'Accept': 'application/json'
+      }
+    });
     
-    updateSummaryStats(stats);
-    createDemographicsChart(stats.ageDistribution);
-    createCorrelationChart(surveys);
-    createKnowledgeCharts(surveys);
-    createBehaviorCharts(surveys);
-    updateComments(surveys, stats);
-    updateRecommendations(surveys, stats);
-    populateDataTable(surveys);
+    const result = await response.json();
     
-    hideLoadingState();
+    if (result.status === 'success' && result.data) {
+      const surveys = result.data;
+      const stats = calculateStats(surveys);
+      
+      updateSummaryStats(stats);
+      createDemographicsChart(stats.ageDistribution);
+      createCorrelationChart(surveys);
+      createKnowledgeCharts(surveys);
+      createBehaviorCharts(surveys);
+      updateComments(surveys, stats);
+      updateRecommendations(surveys, stats);
+      populateDataTable(surveys);
+      
+      hideLoadingState();
+    } else {
+      throw new Error(result.message || 'Dữ liệu rỗng');
+    }
   } catch (error) {
-    console.error('❌ Lỗi tải dữ liệu:', error);
-    showNotification('Không thể kết nối Google Sheets. Vui lòng kiểm tra cấu hình!', 'error');
+    console.error('❌ Lỗi kết nối Google Sheets:', error);
+    showNotification('Không thể kết nối Google Sheets. Vui lòng kiểm tra cấu hình API!', 'error');
     hideLoadingState();
   }
   initializeAnimations();
 }
-
 // Lấy dữ liệu từ Google Sheets
 async function fetchDataFromGoogleSheets() {
   const response = await fetch(`${SHEET_URL}?action=getAllData`);
