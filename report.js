@@ -1,6 +1,5 @@
-
-// 📊 Cấu hình Google Sheets API
-const SHEET_URL = 'https://script.google.com/macros/s/AKfycbwahWIWlY04K9T9yt8REKadzytvZ3hH0V9UytzToO2GTYksmn5MtSUEFuE7YVsaNvgP/exec'; // THAY BẰNG URL CỦA BẠN
+// 📊 URL Google Sheets API - THAY BẰNG URL CỦA BẠN
+const SHEET_URL = 'ttps://script.google.com/macros/s/AKfycbwahWIWlY04K9T9yt8REKadzytvZ3hH0V9UytzToO2GTYksmn5MtSUEFuE7YVsaNvgP/exec';
 
 document.addEventListener('DOMContentLoaded', initializeReport);
 
@@ -43,16 +42,6 @@ async function initializeReport() {
   }
   initializeAnimations();
 }
-// Lấy dữ liệu từ Google Sheets
-async function fetchDataFromGoogleSheets() {
-  const response = await fetch(`${SHEET_URL}?action=getAllData`);
-  const result = await response.json();
-  
-  if (result.status === 'success') {
-    return result.data || [];
-  }
-  throw new Error(result.message || 'Failed to fetch data');
-}
 
 // Tính toán thống kê
 function calculateStats(surveys) {
@@ -72,7 +61,7 @@ function calculateStats(surveys) {
     if (survey.age) stats.ageDistribution[survey.age] = (stats.ageDistribution[survey.age] || 0) + 1;
     if (survey.occupation) stats.occupationDistribution[survey.occupation] = (stats.occupationDistribution[survey.occupation] || 0) + 1;
     
-    // Knowledge score (câu 1,2,3,4,5,6,18)
+    // Knowledge score (7 câu: 1,2,3,4,5,6,18)
     let knowledgePoints = 0;
     if (survey.q1 === 'a') knowledgePoints++;
     if (survey.q2 === 'c') knowledgePoints++;
@@ -82,7 +71,7 @@ function calculateStats(surveys) {
     if (survey.q6 === 'yes') knowledgePoints++;
     if (survey.q18 === 'yes') knowledgePoints++;
     
-    // Behavior score (câu 7,8,9,10,11,12,13,14,15)
+    // Behavior score (9 câu: 7,8,9,10,11,12,13,14,15)
     let behaviorPoints = 0;
     if (survey.q7 === 'rarely') behaviorPoints += 2; else if (survey.q7 === 'monthly') behaviorPoints++;
     if (survey.q8 === 'always') behaviorPoints += 2; else if (survey.q8 === 'sometimes') behaviorPoints++;
@@ -112,6 +101,38 @@ function updateSummaryStats(stats) {
   document.getElementById('summary-participation').textContent = Math.min(100, Math.round(stats.total * 2.5)) + '%';
   
   updateExecutiveSummary(stats);
+}
+
+// BỔ SUNG: Hàm cập nhật tóm tắt (bị thiếu trong code cũ)
+function updateExecutiveSummary(stats) {
+  const summaryElement = document.getElementById('executive-summary');
+  
+  if (stats.total === 0) {
+    summaryElement.textContent = 'Chưa có dữ liệu khảo sát nào được thu thập.';
+    return;
+  }
+  
+  let summary = `Dựa trên ${stats.total} khảo sát, kết quả cho thấy: `;
+  
+  // Knowledge assessment
+  if (stats.knowledgeScore >= 70) {
+    summary += `Người tham gia có mức độ hiểu biết tốt về rác thải nhựa (${stats.knowledgeScore}%). `;
+  } else if (stats.knowledgeScore >= 50) {
+    summary += `Mức độ hiểu biết về rác thải nhựa ở mức trung bình (${stats.knowledgeScore}%), cần cải thiện. `;
+  } else {
+    summary += `Mức độ hiểu biết về rác thải nhựa còn hạn chế (${stats.knowledgeScore}%), cần tìm hiểu nhiều hơn. `;
+  }
+  
+  // Behavior assessment
+  if (stats.behaviorScore >= 70) {
+    summary += `Hành vi thân thiện với môi trường được thực hiện tốt (${stats.behaviorScore}%). `;
+  } else if (stats.behaviorScore >= 50) {
+    summary += `Hành vi có xu hướng tích cực nhưng vẫn cần cải thiện (${stats.behaviorScore}%). `;
+  } else {
+    summary += `Hành vi còn nhiều hạn chế và cần thay đổi (${stats.behaviorScore}%).`;
+  }
+  
+  summaryElement.textContent = summary;
 }
 
 // Tạo biểu đồ nhân khẩu học
@@ -182,11 +203,8 @@ function createCorrelationChart(surveys) {
 
 // Tạo biểu đồ kiến thức
 function createKnowledgeCharts(surveys) {
-  // Câu 1: Định nghĩa
   const q1Score = Math.round((surveys.filter(s => s.q1 === 'a').length / surveys.length) * 100);
-  // Câu 2: Thời gian
   const q2Score = Math.round((surveys.filter(s => s.q2 === 'c').length / surveys.length) * 100);
-  // Câu 3: Tác hại
   const q3Score = Math.round((surveys.filter(s => s.q3 && Array.isArray(s.q3) && s.q3.includes('d')).length / surveys.length) * 100);
   
   document.getElementById('q1-score').textContent = q1Score + '%';
@@ -196,9 +214,7 @@ function createKnowledgeCharts(surveys) {
 
 // Tạo biểu đồ hành vi
 function createBehaviorCharts(surveys) {
-  // Tần suất sử dụng nhựa (q7)
   const usageFreq = { daily: 0, weekly: 0, monthly: 0, rarely: 0 };
-  // Phân loại rác (q8)
   const sortingBehavior = { always: 0, sometimes: 0, rarely: 0, never: 0 };
   
   surveys.forEach(s => {
@@ -206,7 +222,6 @@ function createBehaviorCharts(surveys) {
     if (s.q8) sortingBehavior[s.q8]++;
   });
   
-  // Chart 1: Tần suất
   const usageChart = echarts.init(document.getElementById('usage-frequency-chart'));
   usageChart.setOption({
     tooltip: { trigger: 'item', formatter: '{b}: {c} ({d}%)' },
@@ -223,7 +238,6 @@ function createBehaviorCharts(surveys) {
     }]
   });
   
-  // Chart 2: Phân loại
   const sortingChart = echarts.init(document.getElementById('sorting-behavior-chart'));
   sortingChart.setOption({
     tooltip: { trigger: 'item', formatter: '{b}: {c} ({d}%)' },
@@ -253,6 +267,7 @@ function updateComments(surveys, stats) {
   
   knowledgeComment.textContent = stats.knowledgeScore >= 70 ? 'Kiến thức tốt về rác thải nhựa' :
                                   stats.knowledgeScore >= 50 ? 'Kiến thức cơ bản cần cải thiện' :
+                                  'Kiến thức còn hạn chế, cần tìm hiểu thêm';
   
   behaviorComment.textContent = stats.behaviorScore >= 70 ? 'Hành vi thân thiện môi trường tốt' :
                                   stats.behaviorScore >= 50 ? 'Có một số hành vi tích cực' :
@@ -274,14 +289,6 @@ function updateRecommendations(surveys, stats) {
     eduItems.push('Hướng dẫn phân loại rác tại nhà');
   }
   
-  const policyItems = [];
-  if (surveys.filter(s => s.q7 === 'daily').length > surveys.length * 0.3) {
-    policyItems.push('Ban hành quy định hạn chế nhựa dùng 1 lần');
-  }
-  if (surveys.filter(s => s.q8 === 'never').length > surveys.length * 0.4) {
-    policyItems.push('Cải thiện hệ thống thu gom rác');
-  }
-  
   educationRecs.innerHTML = eduItems.map(item => `
     <li class="flex items-start">
       <i class="fas fa-check text-green-600 mr-2 mt-1"></i>
@@ -289,6 +296,7 @@ function updateRecommendations(surveys, stats) {
     </li>
   `).join('');
   
+  const policyItems = [];
   policyRecs.innerHTML = policyItems.map(item => `
     <li class="flex items-start">
       <i class="fas fa-check text-green-600 mr-2 mt-1"></i>
