@@ -4,16 +4,7 @@ const CACHE_DURATION = 5 * 60 * 1000; // 5 phút
 // ==== KHỞI TẠO ====
 document.addEventListener('DOMContentLoaded', function() {
     initializeDashboard();
-    setupEventListeners();
 });
-
-function setupEventListeners() {
-    // Thêm nút refresh nếu cần
-    const refreshBtn = document.getElementById('refresh-btn');
-    if (refreshBtn) {
-        refreshBtn.addEventListener('click', refreshData);
-    }
-}
 
 // ==== QUẢN LÝ DỮ LIỆU ====
 async function initializeDashboard() {
@@ -22,17 +13,19 @@ async function initializeDashboard() {
         const surveys = await fetchSurveyData();
         const stats = calculateStats(surveys);
         
-        // Cập nhật UI
+        // Cập nhật UI theo thứ tự ưu tiên
         updateStatsCards(stats);
+        createAgeChart(surveys);
+        createOccupationChart(surveys);
         createKnowledgeChart(surveys);
-        createBehaviorChart(surveys); // ĐÂY LÀ HÀM QUAN TRỌNG - BỊ THIẾU TRƯỚC ĐÓ
-        populateRecentSurveys(surveys);
+        createBehaviorChart(surveys); // QUAN TRỌNG: Đảm bảo hàm này được gọi
+        updateInsights(stats);
         
         hideLoadingState();
         showNotification('✅ Tải dữ liệu thành công!', 'success');
         
     } catch (error) {
-        console.error('Lỗi khởi tạo:', error);
+        console.error('❌ Lỗi khởi tạo:', error);
         handleError(error);
     }
 }
@@ -40,7 +33,7 @@ async function initializeDashboard() {
 async function fetchSurveyData() {
     const cached = getCachedData();
     if (cached.data && Date.now() - cached.timestamp < CACHE_DURATION) {
-        showNotification('📊 Sử dụng dữ liệu đã lưu', 'info');
+        showNotification('📊 Sử dụng dữ liệu cached', 'info');
         return cached.data;
     }
     
@@ -69,7 +62,7 @@ async function fetchSurveyData() {
         
     } catch (error) {
         if (error.name === 'AbortError') {
-            throw new Error('⏱️ Quá thời gian chờ. Vui lòng thử lại!');
+            throw new Error('⏱️ Timeout - Vui lòng thử lại!');
         }
         throw error;
     }
@@ -82,8 +75,8 @@ function validateSurveyData(data) {
 function getCachedData() {
     try {
         return {
-            data: JSON.parse(localStorage.getItem('surveyDashboardData') || 'null'),
-            timestamp: parseInt(localStorage.getItem('dashboardLastFetch') || '0')
+            data: JSON.parse(localStorage.getItem('dashboardData') || 'null'),
+            timestamp: parseInt(localStorage.getItem('dashboardCacheTime') || '0')
         };
     } catch {
         return { data: null, timestamp: 0 };
@@ -91,13 +84,13 @@ function getCachedData() {
 }
 
 function saveToCache(data) {
-    localStorage.setItem('surveyDashboardData', JSON.stringify(data));
-    localStorage.setItem('dashboardLastFetch', Date.now().toString());
+    localStorage.setItem('dashboardData', JSON.stringify(data));
+    localStorage.setItem('dashboardCacheTime', Date.now().toString());
 }
 
 async function refreshData() {
-    localStorage.removeItem('surveyDashboardData');
-    localStorage.removeItem('dashboardLastFetch');
+    localStorage.removeItem('dashboardData');
+    localStorage.removeItem('dashboardCacheTime');
     await initializeDashboard();
 }
 
@@ -107,28 +100,21 @@ function calculateStats(surveys) {
     
     const stats = {
         total: surveys.length,
-        avgKnowledge: 0,
-        avgBehavior: 0,
-        participationRate: 0
+        knowledgeSum: 0,
+        behaviorSum: 0
     };
     
-    let totalKnowledge = 0;
-    let totalBehavior = 0;
-    
     surveys.forEach(survey => {
-        // Tính điểm kiến thức (7 câu)
-        totalKnowledge += calculateKnowledgePoints(survey);
-        
-        // Tính điểm hành vi (max 18 điểm)
-        totalBehavior += calculateBehaviorPoints(survey);
+        stats.knowledgeSum += calculateKnowledgePoints(survey);
+        stats.behaviorSum += calculateBehaviorPoints(survey);
     });
     
-    // Chuẩn hóa điểm
-    stats.avgKnowledge = Math.round((totalKnowledge / (surveys.length * 7)) * 100);
-    stats.avgBehavior = Math.round((totalBehavior / (surveys.length * 18)) * 100);
-    stats.participationRate = Math.min(100, Math.round(surveys.length * 2.5));
-    
-    return stats;
+    return {
+        total: stats.total,
+        avgKnowledge: Math.round((stats.knowledgeSum / (stats.total * 7)) * 100),
+        avgBehavior: Math.round((stats.behaviorSum / (stats.total * 18)) * 100),
+        participationRate: Math.min(100, Math.round(stats.total * 2.5))
+    };
 }
 
 function calculateKnowledgePoints(survey) {
@@ -186,20 +172,15 @@ function calculateBehaviorPoints(survey) {
 }
 
 function getEmptyStats() {
-    return { 
-        total: 0, 
-        avgKnowledge: 0, 
-        avgBehavior: 0, 
-        participationRate: 0 
-    };
+    return { total: 0, avgKnowledge: 0, avgBehavior: 0, participationRate: 0 };
 }
 
 // ==== UI UPDATES ====
 function updateStatsCards(stats) {
     const elements = {
         'total-surveys': stats.total.toLocaleString('vi-VN'),
-        'avg-knowledge': stats.avgKnowledge + '%',
-        'avg-behavior': stats.avgBehavior + '%',
+        'knowledge-score': stats.avgKnowledge + '%',
+        'behavior-score': stats.avgBehavior + '%',
         'participation-rate': stats.participationRate + '%'
     };
     
@@ -207,6 +188,50 @@ function updateStatsCards(stats) {
         const el = document.getElementById(id);
         if (el) el.textContent = value;
     });
+}
+
+function createAgeChart(surveys) {
+    const chartDom = document.getElementById('age-chart');
+    if (!chartDom) return;
+    
+    const myChart = echarts.init(chartDom);
+    const ageDist = {};
+    surveys.forEach(s => { ageDist[s.age] = (ageDist[s.age] || 0) + 1; });
+    
+    myChart.setOption({
+        tooltip: { trigger: 'item', formatter: '{b}: {c} người ({d}%)' },
+        series: [{
+            type: 'pie',
+            radius: '70%',
+            center: ['50%', '50%'],
+            data: Object.entries(ageDist).map(([k, v]) => ({ name: getAgeLabel(k), value: v })),
+            color: ['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6']
+        }]
+    });
+    
+    window.addEventListener('resize', () => myChart.resize());
+}
+
+function createOccupationChart(surveys) {
+    const chartDom = document.getElementById('occupation-chart');
+    if (!chartDom) return;
+    
+    const myChart = echarts.init(chartDom);
+    const occDist = {};
+    surveys.forEach(s => { occDist[s.occupation] = (occDist[s.occupation] || 0) + 1; });
+    
+    myChart.setOption({
+        tooltip: { trigger: 'item', formatter: '{b}: {c} người ({d}%)' },
+        series: [{
+            type: 'pie',
+            radius: '70%',
+            center: ['50%', '50%'],
+            data: Object.entries(occDist).map(([k, v]) => ({ name: getOccupationLabel(k), value: v })),
+            color: ['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6', '#6366f1']
+        }]
+    });
+    
+    window.addEventListener('resize', () => myChart.resize());
 }
 
 function createKnowledgeChart(surveys) {
@@ -226,19 +251,14 @@ function createKnowledgeChart(surveys) {
         'Ký hiệu': surveys.filter(s => s.q18 === 'yes').length
     };
     
-    const data = Object.entries(correct).map(([key, value]) => ({
-        name: key,
-        value: Math.round((value / total) * 100)
-    }));
-    
     myChart.setOption({
         tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
         grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true },
         xAxis: { type: 'value', max: 100, axisLabel: { formatter: '{value}%' } },
-        yAxis: { type: 'category', data: data.map(item => item.name) },
+        yAxis: { type: 'category', data: Object.keys(correct) },
         series: [{
             type: 'bar',
-            data: data.map(item => item.value),
+            data: Object.values(correct).map(v => Math.round((v / total) * 100)),
             itemStyle: { color: '#10b981' },
             label: { show: true, position: 'right', formatter: '{c}%' }
         }]
@@ -247,28 +267,36 @@ function createKnowledgeChart(surveys) {
     window.addEventListener('resize', () => myChart.resize());
 }
 
-// ==== SỬA LỖI CHÍNH: THÊM HÀM TẠO BIỂU ĐỒ HÀNH VI ====
+// ==== HÀM TẠO BIỂU ĐỒ HÀNH VI - QUAN TRỌNG ====
 function createBehaviorChart(surveys) {
     const chartDom = document.getElementById('behavior-chart');
     if (!chartDom) {
-        console.error('Không tìm thấy phần tử behavior-chart!');
+        console.error('❌ Không tìm thấy #behavior-chart');
         return;
     }
     
     const myChart = echarts.init(chartDom);
+    const total = surveys.length || 1;
     
-    // Xử lý dữ liệu hành vi
-    const behaviorData = processBehaviorDataForChart(surveys);
+    // Xử lý dữ liệu hành vi tích cực
+    const behaviorData = [
+        { name: 'Sử dụng 1 lần', value: surveys.filter(s => s.q7 === 'daily').length },
+        { name: 'Phân loại rác', value: surveys.filter(s => s.q8 === 'always').length },
+        { name: 'Mang túi vải', value: surveys.filter(s => s.q13 === 'avoid').length },
+        { name: 'Tham gia hoạt động', value: surveys.filter(s => s.q15 === 'always').length },
+        { name: 'Tái chế', value: surveys.filter(s => s.q9 === 'always').length },
+        { name: 'Không vứt rác bừa', value: surveys.filter(s => s.q14 === 'never').length }
+    ];
     
     myChart.setOption({
         tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
         grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true },
-        xAxis: { type: 'category', data: behaviorData.map(item => item.name) },
+        xAxis: { type: 'category', data: behaviorData.map(d => d.name), axisLabel: { rotate: 30 } },
         yAxis: { type: 'value', max: 100, axisLabel: { formatter: '{value}%' } },
         series: [{
             name: 'Tỷ lệ',
             type: 'bar',
-            data: behaviorData.map(item => item.value),
+            data: behaviorData.map(d => Math.round((d.value / total) * 100)),
             itemStyle: { color: '#3b82f6' },
             label: { show: true, position: 'top', formatter: '{c}%' }
         }]
@@ -277,39 +305,28 @@ function createBehaviorChart(surveys) {
     window.addEventListener('resize', () => myChart.resize());
 }
 
-// HÀM MỚI: Xử lý dữ liệu hành vi cho biểu đồ
-function processBehaviorDataForChart(surveys) {
-    const total = surveys.length || 1;
+function updateInsights(stats) {
+    const kInsight = document.getElementById('knowledge-insight');
+    const bInsight = document.getElementById('behavior-insight');
+    const tInsight = document.getElementById('trend-insight');
     
-    // Tính tỷ lệ cho mỗi hành vi tích cực
-    const data = [
-        {
-            name: 'Sử dụng 1 lần',
-            value: Math.round((surveys.filter(s => s.q7 === 'daily').length / total) * 100)
-        },
-        {
-            name: 'Phân loại rác',
-            value: Math.round((surveys.filter(s => s.q8 === 'always').length / total) * 100)
-        },
-        {
-            name: 'Sử dụng túi vải',
-            value: Math.round((surveys.filter(s => s.q13 === 'avoid').length / total) * 100)
-        },
-        {
-            name: 'Tham gia hoạt động',
-            value: Math.round((surveys.filter(s => s.q15 === 'always').length / total) * 100)
-        },
-        {
-            name: 'Tái chế',
-            value: Math.round((surveys.filter(s => s.q9 === 'always').length / total) * 100)
-        },
-        {
-            name: 'Không vứt rác bừa',
-            value: Math.round((surveys.filter(s => s.q14 === 'never').length / total) * 100)
-        }
-    ];
+    if (kInsight) {
+        kInsight.textContent = stats.avgKnowledge >= 70 ? 'Nhận thức tốt về rác thải nhựa' :
+                               stats.avgKnowledge >= 50 ? 'Cần tăng cường giáo dục' :
+                               'Nhận thức còn hạn chế';
+    }
     
-    return data;
+    if (bInsight) {
+        bInsight.textContent = stats.avgBehavior >= 70 ? 'Hành vi thân thiện môi trường' :
+                               stats.avgBehavior >= 50 ? 'Hành vi có tích cực' :
+                               'Cần thay đổi thói quen';
+    }
+    
+    if (tInsight) {
+        tInsight.textContent = stats.avgKnowledge > stats.avgBehavior ? 
+                               'Kiến thức > Hành vi: Cần chuyển tri thức thành hành động' :
+                               'Hành vi tốt nhưng cần nâng cao kiến thức';
+    }
 }
 
 function populateRecentSurveys(surveys) {
@@ -350,27 +367,33 @@ function formatTimestamp(timestamp) {
 }
 
 function showLoadingState() {
-    document.querySelectorAll('#total-surveys, #avg-knowledge, #avg-behavior, #participation-rate')
+    document.querySelectorAll('#total-surveys, #knowledge-score, #behavior-score, #participation-rate')
         .forEach(el => { if (el) el.textContent = '...'; });
+    
+    document.querySelectorAll('#knowledge-insight, #behavior-insight, #trend-insight')
+        .forEach(el => { if (el) el.textContent = 'Đang tải...'; });
 }
 
 function hideLoadingState() {
-    // Dữ liệu sẽ được cập nhật tự động
+    // Tự động cập nhật qua các hàm khác
 }
 
 function handleError(error) {
-    console.error('Lỗi:', error);
+    console.error('❌ Lỗi:', error);
     
     const cachedData = getCachedData().data;
     if (cachedData?.length > 0) {
         showNotification('⚠️ Đang dùng dữ liệu cache', 'warning');
         const stats = calculateStats(cachedData);
         updateStatsCards(stats);
+        createAgeChart(cachedData);
+        createOccupationChart(cachedData);
         createKnowledgeChart(cachedData);
-        createBehaviorChart(cachedData); // Gọi hàm này ngay cả khi dùng cache
+        createBehaviorChart(cachedData);
+        updateInsights(stats);
         populateRecentSurveys(cachedData);
     } else {
-        showNotification('❌ Không thể tải dữ liệu. Vui lòng thử lại!', 'error');
+        showNotification('❌ Không thể tải dữ liệu', 'error');
     }
     hideLoadingState();
 }
@@ -405,7 +428,7 @@ function showNotification(message, type = 'info') {
     
     document.body.appendChild(notification);
     
-    // Auto remove after 4s
+    // Auto remove
     setTimeout(() => {
         notification.style.opacity = '0';
         notification.style.transform = 'translateX(100%)';
