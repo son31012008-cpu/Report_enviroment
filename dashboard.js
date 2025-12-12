@@ -194,7 +194,7 @@ function updateInsights(stats) {
   
   kInsight.textContent = stats.knowledgeScore >= 70 ? 'Kiến thức tốt về rác thải nhựa' :
                           stats.knowledgeScore >= 50 ? 'Kiến thức cơ bản cần cải thiện' :
-                          'Kiến thức còn hạn chế, cần giáo dục';
+                          'Bạn cần tìm hiểu thêm về kiến thức cơ bản về rác thải nhựa';
   
   bInsight.textContent = stats.behaviorScore >= 70 ? 'Hành vi thân thiện môi trường tốt' :
                           stats.behaviorScore >= 50 ? 'Có một số hành vi tích cực' :
